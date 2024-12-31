@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <title>Movies - Book & Movie Recommendations</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        .movie-card {
+            transition: transform 0.2s;
+        }
+        .movie-card:hover {
+            transform: scale(1.02);
+        }
+        .movie-poster {
+            height: 300px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/home">Book & Movie Recommendations</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/books">Books</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/movies">Movies</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" 
+                           data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> 
+                            <span sec:authentication="name">Username</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/user/profile">Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post" class="dropdown-item">
+                                    <button type="submit" class="btn btn-link text-decoration-none p-0">
+                                        <i class="bi bi-box-arrow-right"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Error Messages -->
+    <div class="container mt-4" th:if="${error}">
+        <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span th:text="${error}">Error message</span>
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <form th:action="@{/movies/search}" method="get" class="d-flex gap-2">
+                    <input type="text" name="query" class="form-control" 
+                           placeholder="Search for movies or TV shows..."
+                           th:value="${searchQuery}" required>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shows Display Section -->
+    <div class="container mt-4">
+        <!-- Featured Shows Section -->
+        <div th:if="${featuredShows != null && !#lists.isEmpty(featuredShows)}">
+            <h2 class="mb-4">Featured Shows</h2>
+            <div class="row row-cols-1 row-cols-md-4 g-4">
+                <div class="col" th:each="show : ${featuredShows}">
+                    <div class="card h-100 movie-card shadow-sm">
+                        <img th:if="${show.image != null && show.image.medium != null}" 
+                            th:src="${show.image.medium}"
+                            class="card-img-top movie-poster" 
+                            th:alt="${show.name}">
+                        <img th:unless="${show.image != null && show.image.medium != null}" 
+                            src="/static/images/no-poster.jpg"
+                            class="card-img-top movie-poster" 
+                            alt="No poster available">
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${show.name}">Show Title</h5>
+                            <p class="card-text text-muted">
+                                <span th:text="${show.genres != null ? #strings.listJoin(show.genres, ', ') : 'N/A'}">Genres</span>
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-primary" th:if="${show.rating != null && show.rating.average != null}">
+                                    <i class="bi bi-star-fill"></i> 
+                                    <span th:text="${#numbers.formatDecimal(show.rating.average, 1, 1)}">0.0</span>
+                                </span>
+                                <a th:href="@{/movies/details/{id}(id=${show.id})}" class="btn btn-outline-primary btn-sm">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Results Section -->
+        <div th:if="${shows != null && !#lists.isEmpty(shows)}">
+            <h2 class="mb-4">Search Results</h2>
+            <div class="row row-cols-1 row-cols-md-4 g-4">
+                <div class="col" th:each="show : ${shows}">
+                    <div class="card h-100 movie-card shadow-sm">
+                        <img th:if="${show.image != null}" th:src="${show.image.medium}"
+                             class="card-img-top movie-poster" th:alt="${show.name}">
+                        <img th:unless="${show.image != null}" src="/static/images/no-poster.jpg"
+                             class="card-img-top movie-poster" alt="No poster available">
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${show.name}">Show Title</h5>
+                            <p class="card-text text-muted">
+                                <span th:text="${show.genres != null ? #strings.listJoin(show.genres, ', ') : 'N/A'}">Genres</span>
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-primary" th:if="${show.rating != null && show.rating.average != null}">
+                                    <i class="bi bi-star-fill"></i> 
+                                    <span th:text="${#numbers.formatDecimal(show.rating.average, 1, 1)}">0.0</span>
+                                </span>
+                                <a th:href="@{/movies/details/{id}(id=${show.id})}" class="btn btn-outline-primary btn-sm">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Results Message -->
+        <div th:if="${(shows != null && #lists.isEmpty(shows)) || (featuredShows != null && #lists.isEmpty(featuredShows))}" 
+             class="text-center mt-5">
+            <i class="bi bi-emoji-frown display-1"></i>
+            <h3 class="mt-3">No shows found</h3>
+            <p class="text-muted">Try searching for something else</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
