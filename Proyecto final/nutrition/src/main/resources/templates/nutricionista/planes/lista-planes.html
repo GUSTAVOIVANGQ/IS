@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planes de Dieta - Sistema de Nutrición</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .plan-card {
+            transition: transform 0.2s;
+        }
+        .plan-card:hover {
+            transform: translateY(-5px);
+        }
+        .filtros {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Sistema de Nutrición</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/nutricionista/dashboard}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/nutricionista/pacientes}">Pacientes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" th:href="@{/nutricionista/planes}">Planes</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Encabezado -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Planes de Dieta</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearPlan">
+                <i class="bi bi-plus-circle"></i> Crear Plan
+            </button>
+        </div>
+
+        <!-- Alertas -->
+        <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${mensaje}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filtros">
+            <form th:action="@{/nutricionista/planes/filtrar}" method="get" class="row g-3">
+                <div class="col-md-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="vegetariano" id="checkVegetariano">
+                        <label class="form-check-label" for="checkVegetariano">Vegetariano</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="vegano" id="checkVegano">
+                        <label class="form-check-label" for="checkVegano">Vegano</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="sinGluten" id="checkSinGluten">
+                        <label class="form-check-label" for="checkSinGluten">Sin Gluten</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-funnel"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista de Planes -->
+        <div class="row g-4">
+            <div th:each="plan : ${planes}" class="col-md-6 col-lg-4">
+                <div class="card plan-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${plan.nombre}">Nombre del Plan</h5>
+                        <p class="card-text" th:text="${plan.descripcion}">Descripción del plan</p>
+                        
+                        <div class="mb-3">
+                            <span class="badge bg-primary" th:text="${plan.objetivo}">Objetivo</span>
+                            <span class="badge" 
+                                  th:classappend="${plan.activo ? 'bg-success' : 'bg-secondary'}"
+                                  th:text="${plan.estado}">Estado</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                Calorías: <span th:text="${plan.caloriasObjetivo}">2000</span> kcal
+                            </small>
+                            <div class="btn-group">
+                                <a th:href="@{/nutricionista/planes/{id}(id=${plan.id})}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a th:href="@{/nutricionista/planes/{id}/editar(id=${plan.id})}" 
+                                   class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button th:data-plan-id="${plan.id}"
+                                        class="btn btn-sm btn-outline-success toggle-estado">
+                                    <i class="bi" th:classappend="${plan.activo ? 'bi-toggle-on' : 'bi-toggle-off'}"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Crear Plan -->
+        <div class="modal fade" id="modalCrearPlan" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Crear Nuevo Plan</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formCrearPlan" th:action="@{/nutricionista/planes/crear}" method="post">
+                            <div class="mb-3">
+                                <label for="pacienteId" class="form-label">Seleccionar Paciente</label>
+                                <select class="form-select" id="pacienteId" name="pacienteId" required>
+                                    <option value="">Seleccionar...</option>
+                                    <!-- Agregar validación para el caso de nutricionista nulo -->
+                                    <th:block th:if="${nutricionista != null && nutricionista.pacientes != null}">
+                                        <option th:each="paciente : ${nutricionista.pacientes}"
+                                                th:value="${paciente.id}"
+                                                th:text="${paciente.nombre + ' ' + paciente.apellido}">
+                                        </option>
+                                    </th:block>
+                                </select>
+                                <!-- Mensaje cuando no hay pacientes -->
+                                <div th:if="${nutricionista == null || nutricionista.pacientes == null || nutricionista.pacientes.empty}"
+                                     class="alert alert-warning mt-2">
+                                    No hay pacientes disponibles. Debe agregar pacientes primero.
+                                </div>
+                            </div>
+                            <!-- Otros campos del formulario -->
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" form="formCrearPlan" class="btn btn-primary">Crear Plan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Manejo de toggle estado
+        document.querySelectorAll('.toggle-estado').forEach(button => {
+            button.addEventListener('click', function() {
+                const planId = this.dataset.planId;
+                const icon = this.querySelector('i');
+                
+                fetch(`/nutricionista/planes/${planId}/toggle-estado`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        icon.classList.toggle('bi-toggle-on');
+                        icon.classList.toggle('bi-toggle-off');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

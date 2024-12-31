@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Pacientes - Sistema de Nutrición</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        .action-buttons .btn {
+            margin-right: 5px;
+        }
+        .status-badge {
+            width: 100px;
+        }
+        .imc-indicator {
+            width: 15px;
+            height: 15px;
+            display: inline-block;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .imc-bajo { background-color: #ffc107; }
+        .imc-normal { background-color: #198754; }
+        .imc-sobrepeso { background-color: #fd7e14; }
+        .imc-obesidad { background-color: #dc3545; }
+        @media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+            .action-buttons .btn {
+                padding: 0.25rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Sistema de Nutrición</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/nutricionista/dashboard}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" th:href="@{/nutricionista/pacientes}">Pacientes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/nutricionista/citas}">Citas</a>
+                    </li>
+                </ul>
+                <form th:action="@{/logout}" method="post" class="d-flex">
+                    <button class="btn btn-light" type="submit">Cerrar Sesión</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container my-4">
+        <!-- Cabecera -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Lista de Pacientes</h2>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filtrosModal">
+                    <i class="bi bi-funnel"></i> Filtros
+                </button>
+                <a href="/nutricionista/pacientes/nuevo" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Nuevo Paciente
+                </a>
+            </div>
+        </div>
+
+        <!-- Alertas -->
+        <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${mensaje}">Operación exitosa</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}">Error</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Tabla de Pacientes -->
+        <div class="card">
+            <div class="card-body">
+                <!-- Añadir mensaje de diagnóstico -->
+                <div th:if="${pacientes == null}" class="alert alert-warning">
+                    La lista de pacientes es null
+                </div>
+                <div th:if="${pacientes != null and pacientes.empty}" class="alert alert-info">
+                    No hay pacientes registrados.
+                </div>
+                <div th:if="${pacientes != null and not pacientes.empty}" 
+                     class="alert alert-success" role="alert">
+                    Número de pacientes encontrados: <span th:text="${pacientes.size()}">0</span>
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="tablaPacientes" class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Objetivo</th>
+                                <th>IMC</th>
+                                <th>Estado</th>
+                                <th>Última Consulta</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="paciente : ${pacientes}" th:if="${paciente != null}">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img th:if="${paciente.genero == 'MASCULINO'}" 
+                                             src="/img/avatar-male.png" 
+                                             class="rounded-circle me-2" 
+                                             width="32" height="32">
+                                        <img th:if="${paciente.genero == 'FEMENINO'}" 
+                                             src="/img/avatar-female.png" 
+                                             class="rounded-circle me-2" 
+                                             width="32" height="32">
+                                        <div>
+                                            <span th:text="${paciente.nombre + ' ' + paciente.apellido}">Nombre Completo</span><br>
+                                            <small class="text-muted" th:text="${paciente.edad + ' años'}">Edad</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td th:text="${paciente.email}">email@ejemplo.com</td>
+                                <td th:text="${paciente.objetivoNutricional}">Pérdida de peso</td>
+                                <td>
+                                    <span th:text="${#numbers.formatDecimal(paciente.imc, 1, 1)}">25.0</span>
+                                    <small class="text-muted" th:text="${paciente.estadoNutricional}">Normal</small>
+                                </td>
+                                <td>
+                                    <span class="badge status-badge"
+                                          th:classappend="${paciente.estadoSeguimiento == 'ACTIVO' ? 'bg-success' : 
+                                                          paciente.estadoSeguimiento == 'PAUSADO' ? 'bg-warning' : 'bg-danger'}"
+                                          th:text="${paciente.estadoSeguimiento}">
+                                        Estado
+                                    </span>
+                                </td>
+                                <td th:text="${#temporals.format(paciente.ultimaConsulta, 'dd/MM/yyyy')}">01/01/2024</td>
+                                <td class="action-buttons">
+                                    <div th:if="${paciente.id != null}">
+                                        <a th:href="@{/nutricionista/pacientes/{id}(id=${paciente.id})}" 
+                                           class="btn btn-sm btn-info" title="Ver detalles">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a th:href="@{/nutricionista/pacientes/{id}/editar(id=${paciente.id})}" 
+                                           class="btn btn-sm btn-warning" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a th:href="@{/nutricionista/pacientes/{id}/historial(id=${paciente.id})}" 
+                                           class="btn btn-sm btn-primary" title="Historial médico">
+                                            <i class="bi bi-clipboard2-pulse"></i>
+                                        </a>
+                                    </div>
+                                    <div th:if="${paciente.id == null}" class="text-danger">
+                                        ID no disponible
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Filtros -->
+    <div class="modal fade" id="filtrosModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Filtrar Pacientes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="filtrosForm">
+                        <div class="mb-3">
+                            <label class="form-label">Estado Nutricional</label>
+                            <select class="form-select" name="estadoNutricional">
+                                <option value="">Todos</option>
+                                <option value="BAJO_PESO">Bajo Peso</option>
+                                <option value="NORMAL">Normal</option>
+                                <option value="SOBREPESO">Sobrepeso</option>
+                                <option value="OBESIDAD">Obesidad</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Estado de Seguimiento</label>
+                            <select class="form-select" name="estadoSeguimiento">
+                                <option value="">Todos</option>
+                                <option value="ACTIVO">Activo</option>
+                                <option value="PAUSADO">Pausado</option>
+                                <option value="COMPLETADO">Completado</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Rango de IMC</label>
+                            <div class="row">
+                                <div class="col">
+                                    <input type="number" class="form-control" name="imcMin" placeholder="Mínimo" step="0.1">
+                                </div>
+                                <div class="col">
+                                    <input type="number" class="form-control" name="imcMax" placeholder="Máximo" step="0.1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Objetivo Nutricional</label>
+                            <select class="form-select" name="objetivo">
+                                <option value="">Todos</option>
+                                <option value="PERDIDA_PESO">Pérdida de Peso</option>
+                                <option value="GANANCIA_PESO">Ganancia de Peso</option>
+                                <option value="MANTENIMIENTO">Mantenimiento</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="aplicarFiltros">Aplicar Filtros</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Configuración de CSRF
+            const token = $("meta[name='_csrf']").attr("content");
+            const header = $("meta[name='_csrf_header']").attr("content");
+
+            $.ajaxSetup({
+                beforeSend: function(xhr) {
+                    if (token && header) {
+                        xhr.setRequestHeader(header, token);
+                    }
+                }
+            });
+
+            // Inicialización de DataTables
+            const table = $('#tablaPacientes').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+                },
+                pageLength: 10,
+                order: [[5, 'desc']], // Corregido - usando array simple
+                columnDefs: [
+                    { targets: -1, orderable: false },
+                    {
+                        targets: 3,
+                        render: function(data, type, row) {
+                            const imc = parseFloat(data);
+                            let clase = '';
+                            if (imc < 18.5) clase = 'imc-bajo';
+                            else if (imc < 25) clase = 'imc-normal';
+                            else if (imc < 30) clase = 'imc-sobrepeso';
+                            else clase = 'imc-obesidad';
+                            
+                            return `<span class="imc-indicator ${clase}" data-bs-toggle="tooltip" 
+                                   title="IMC: ${imc}"></span>${data}`;
+                        }
+                    }
+                ]
+            });
+
+            // Inicializar tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
+
+            // Aplicar filtros
+            $('#aplicarFiltros').click(function() {
+                const filtros = {
+                    estadoNutricional: $('select[name="estadoNutricional"]').val() || null,
+                    estadoSeguimiento: $('select[name="estadoSeguimiento"]').val() || null,
+                    imcMin: parseFloat($('input[name="imcMin"]').val()) || null,
+                    imcMax: parseFloat($('input[name="imcMax"]').val()) || null,
+                    objetivo: $('select[name="objetivo"]').val() || null
+                };
+
+                console.log('Enviando filtros:', filtros); // Para debug
+
+                $.ajax({
+                    url: '/nutricionista/pacientes/filtrar',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(filtros),
+                    success: function(response) {
+                        console.log('Respuesta:', response); // Para debug
+                        if (response.success) {
+                            const table = $('#tablaPacientes').DataTable();
+                            table.clear();
+                            
+                            response.pacientes.forEach(function(paciente) {
+                                const row = [
+                                    construirColumnaNombre(paciente),
+                                    paciente.email || '',
+                                    paciente.objetivoNutricional || '',
+                                    construirColumnaIMC(paciente),
+                                    construirColumnaEstado(paciente),
+                                    formatearFecha(paciente.ultimaConsulta),
+                                    construirColumnaBotones(paciente)
+                                ];
+                                table.row.add(row);
+                            });
+                            
+                            table.draw();
+                            $('.alert-success').text('Número de pacientes encontrados: ' + response.total).show();
+                            $('#filtrosModal').modal('hide');
+                        } else {
+                            alert('Error al aplicar filtros: ' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error); // Para debug
+                        alert('Error al aplicar filtros. Por favor, intente nuevamente.');
+                    }
+                });
+            });
+
+            // Función para construir columna IMC
+            function construirColumnaIMC(paciente) {
+                const imc = paciente.indiceMasaCorporal;
+                let clase = '';
+                if (imc < 18.5) clase = 'imc-bajo';
+                else if (imc < 25) clase = 'imc-normal';
+                else if (imc < 30) clase = 'imc-sobrepeso';
+                else clase = 'imc-obesidad';
+                
+                return `<span class="imc-indicator ${clase}" data-bs-toggle="tooltip" 
+                       title="IMC: ${imc.toFixed(1)}"></span>${imc.toFixed(1)}`;
+            }
+
+            // Funciones auxiliares para construir columnas
+            function construirColumnaNombre(paciente) {
+                return `
+                    <div class="d-flex align-items-center">
+                        <img src="/img/avatar-${paciente.genero.toLowerCase()}.png" 
+                             class="rounded-circle me-2" width="32" height="32">
+                        <div>
+                            <span>${paciente.nombre} ${paciente.apellido}</span><br>
+                            <small class="text-muted">${paciente.edad} años</small>
+                        </div>
+                    </div>`;
+            }
+
+            function construirColumnaEstado(paciente) {
+                const colorClase = paciente.estadoSeguimiento === 'ACTIVO' ? 'bg-success' : 
+                                 paciente.estadoSeguimiento === 'PAUSADO' ? 'bg-warning' : 'bg-danger';
+                return `<span class="badge status-badge ${colorClase}">${paciente.estadoSeguimiento}</span>`;
+            }
+
+            function construirColumnaBotones(paciente) {
+                return `
+                    <div>
+                        <a href="/nutricionista/pacientes/${paciente.id}" class="btn btn-sm btn-info" title="Ver detalles">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="/nutricionista/pacientes/${paciente.id}/editar" class="btn btn-sm btn-warning" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="/nutricionista/pacientes/${paciente.id}/historial" class="btn btn-sm btn-primary" title="Historial médico">
+                            <i class="bi bi-clipboard2-pulse"></i>
+                        </a>
+                    </div>`;
+                if (imc < 18.5) clase = 'imc-bajo';
+            }
+
+            function formatearFecha(fecha) {
+                if (!fecha) return '';
+                const f = new Date(fecha);
+                return f.toLocaleDateString('es-ES');
+            }
+        });
+    </script>
+</body>
+</html>

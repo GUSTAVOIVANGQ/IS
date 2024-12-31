@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Paciente - Sistema de Nutrición</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .form-section {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Sistema de Nutrición</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/nutricionista/dashboard}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" th:href="@{/nutricionista/pacientes}">Pacientes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/nutricionista/citas}">Citas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container my-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Editar Paciente</h2>
+            <a th:href="@{/nutricionista/pacientes}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Volver a la lista
+            </a>
+        </div>
+
+        <!-- Alertas -->
+        <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${mensaje}">Operación exitosa</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Formulario de Edición -->
+        <form th:action="@{/nutricionista/pacientes/{id}/editar(id=${paciente.id})}" 
+              th:object="${paciente}" 
+              method="post" 
+              class="needs-validation" 
+              novalidate>
+
+            <!-- Información Personal -->
+            <div class="form-section">
+                <h4 class="mb-3">Información Personal</h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="nombre" class="form-label required-field">Nombre</label>
+                        <input type="text" class="form-control" id="nombre" th:field="*{nombre}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="apellido" class="form-label required-field">Apellido</label>
+                        <input type="text" class="form-control" id="apellido" th:field="*{apellido}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="edad" class="form-label required-field">Edad</label>
+                        <input type="number" class="form-control" id="edad" th:field="*{edad}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="genero" class="form-label required-field">Género</label>
+                        <select class="form-select" id="genero" th:field="*{genero}" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="MASCULINO">Masculino</option>
+                            <option value="FEMENINO">Femenino</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="telefono" class="form-label">Teléfono</label>
+                        <input type="tel" class="form-control" id="telefono" th:field="*{telefono}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Métricas Corporales -->
+            <div class="form-section">
+                <h4 class="mb-3">Métricas Corporales</h4>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="peso" class="form-label required-field">Peso (kg)</label>
+                        <input type="number" step="0.1" class="form-control" id="peso" th:field="*{peso}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="estatura" class="form-label required-field">Estatura (m)</label>
+                        <input type="number" step="0.01" class="form-control" id="estatura" th:field="*{estatura}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="imc" class="form-label">IMC</label>
+                        <input type="number" step="0.1" class="form-control" id="imc" th:value="${paciente.imc}" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Objetivos y Seguimiento -->
+            <div class="form-section">
+                <h4 class="mb-3">Objetivos y Seguimiento</h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="objetivoNutricional" class="form-label required-field">Objetivo Nutricional</label>
+                        <select class="form-select" id="objetivoNutricional" th:field="*{objetivoNutricional}" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="PERDIDA_PESO">Pérdida de Peso</option>
+                            <option value="GANANCIA_PESO">Ganancia de Peso</option>
+                            <option value="MANTENIMIENTO">Mantenimiento</option>
+                            <option value="RENDIMIENTO_DEPORTIVO">Rendimiento Deportivo</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="pesoObjetivo" class="form-label">Peso Objetivo (kg)</label>
+                        <input type="number" step="0.1" class="form-control" id="pesoObjetivo" th:field="*{pesoObjetivo}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="actividadFisica" class="form-label required-field">Nivel de Actividad Física</label>
+                        <select class="form-select" id="actividadFisica" th:field="*{actividadFisica}" required>
+                            <option value="SEDENTARIO">Sedentario</option>
+                            <option value="MODERADO">Moderado</option>
+                            <option value="ACTIVO">Activo</option>
+                            <option value="MUY_ACTIVO">Muy Activo</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información Médica -->
+            <div class="form-section">
+                <h4 class="mb-3">Información Médica</h4>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label for="enfermedadesCronicas" class="form-label">Enfermedades Crónicas</label>
+                        <textarea class="form-control" id="enfermedadesCronicas" th:field="*{enfermedadesCronicas}" rows="2"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label for="alergias" class="form-label">Alergias</label>
+                        <textarea class="form-control" id="alergias" th:field="*{alergias}" rows="2"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="grupoSanguineo" class="form-label">Grupo Sanguíneo</label>
+                        <select class="form-select" id="grupoSanguineo" th:field="*{grupoSanguineo}">
+                            <option value="">Seleccionar...</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex gap-2 justify-content-end">
+                <a th:href="@{/nutricionista/pacientes}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Cálculo automático de IMC
+        document.addEventListener('DOMContentLoaded', function() {
+            const peso = document.getElementById('peso');
+            const estatura = document.getElementById('estatura');
+            const imc = document.getElementById('imc');
+
+            function calcularIMC() {
+                if (peso.value && estatura.value) {
+                    const imcValue = peso.value / (estatura.value * estatura.value);
+                    imc.value = imcValue.toFixed(1);
+                }
+            }
+
+            peso.addEventListener('input', calcularIMC);
+            estatura.addEventListener('input', calcularIMC);
+        });
+
+        // Validación del formulario
+        (function() {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms).forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
+</body>
+</html>

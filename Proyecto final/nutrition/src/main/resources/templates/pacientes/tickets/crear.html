@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Ticket - Sistema de Nutrición</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <style>
+        .form-section {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">NutriSystem</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/paciente/dashboard}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/paciente/citas}">Mis Citas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" th:href="@{/paciente/tickets}">Mis Tickets</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Encabezado -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Crear Nuevo Ticket</h2>
+            <a th:href="@{/paciente/tickets}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Volver a Tickets
+            </a>
+        </div>
+
+        <!-- Alertas -->
+        <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${mensaje}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Formulario -->
+        <form th:action="@{/paciente/tickets/crear}" th:object="${ticket}" method="post" class="needs-validation" novalidate>
+            <div class="form-section">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label for="titulo" class="form-label required-field">Título</label>
+                        <input type="text" class="form-control" id="titulo" th:field="*{titulo}" 
+                               placeholder="Describe brevemente tu consulta" required>
+                        <div class="invalid-feedback">Por favor ingresa un título para el ticket</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="categoria" class="form-label required-field">Categoría</label>
+                        <select class="form-select" id="categoria" th:field="*{categoria}" required>
+                            <option value="">Seleccionar categoría...</option>
+                            <option value="CONSULTA_DIETA">Consulta sobre Dieta</option>
+                            <option value="PROBLEMA_TECNICO">Problema Técnico</option>
+                            <option value="AJUSTE_PLAN">Ajuste de Plan</option>
+                            <option value="CONSULTA_GENERAL">Consulta General</option>
+                        </select>
+                        <div class="invalid-feedback">Por favor selecciona una categoría</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="prioridad" class="form-label required-field">Prioridad</label>
+                        <select class="form-select" id="prioridad" th:field="*{prioridad}" required>
+                            <option value="">Seleccionar prioridad...</option>
+                            <option value="BAJA">Baja</option>
+                            <option value="MEDIA">Media</option>
+                            <option value="ALTA">Alta</option>
+                        </select>
+                        <div class="invalid-feedback">Por favor selecciona una prioridad</div>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="descripcion" class="form-label required-field">Descripción</label>
+                        <textarea class="form-control" id="descripcion" th:field="*{descripcion}" 
+                                  rows="5" required
+                                  placeholder="Describe detalladamente tu consulta o problema"></textarea>
+                        <div class="invalid-feedback">Por favor proporciona una descripción</div>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="etiquetas" class="form-label">Etiquetas</label>
+                        <select class="form-select" id="etiquetas" th:field="*{etiquetas}" multiple>
+                            <option value="DIETA">Dieta</option>
+                            <option value="EJERCICIO">Ejercicio</option>
+                            <option value="MEDICIONES">Mediciones</option>
+                            <option value="CONSULTA">Consulta</option>
+                            <option value="TECNICO">Técnico</option>
+                        </select>
+                        <small class="text-muted">Selecciona una o más etiquetas para categorizar tu ticket</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a th:href="@{/paciente/tickets}" class="btn btn-secondary me-md-2">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Crear Ticket</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        // Inicializar Select2 para las etiquetas
+        $(document).ready(function() {
+            $('#etiquetas').select2({
+                placeholder: 'Selecciona etiquetas',
+                allowClear: true
+            });
+        });
+
+        // Validación del formulario
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
+</body>
+</html>

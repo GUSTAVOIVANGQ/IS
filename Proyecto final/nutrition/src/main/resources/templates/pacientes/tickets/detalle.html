@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de Ticket - Sistema de Nutrición</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .respuesta-card {
+            border-left: 4px solid transparent;
+            margin-bottom: 1rem;
+        }
+        .respuesta-card.automatica { border-left-color: #6c757d; }
+        .respuesta-card.nutricionista { border-left-color: #0d6efd; }
+        .respuesta-card.paciente { border-left-color: #198754; }
+        .chat-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">NutriSystem</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/paciente/dashboard}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/paciente/citas}">Mis Citas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" th:href="@{/paciente/tickets}">Mis Tickets</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Encabezado -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>Ticket #<span th:text="${ticket.numeroReferencia}">TKT-2024-0001</span></h2>
+                <p class="text-muted" th:text="${ticket.titulo}">Título del Ticket</p>
+            </div>
+            <div class="d-flex gap-2">
+                <form th:if="${ticket.estado != 'RESUELTO' && ticket.estado != 'CERRADO'}"
+                      th:action="@{/paciente/tickets/{id}/resolver(id=${ticket.id})}" 
+                      method="post" 
+                      style="display: inline;">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Marcar como Resuelto
+                    </button>
+                </form>
+                <a th:href="@{/paciente/tickets}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+            </div>
+        </div>
+
+        <!-- Información del Ticket -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Descripción</h5>
+                        <p class="card-text" th:text="${ticket.descripcion}">Descripción del ticket...</p>
+                        <div class="d-flex gap-2">
+                            <span th:each="etiqueta : ${ticket.etiquetas}" 
+                                  class="badge bg-info" 
+                                  th:text="${etiqueta}">Etiqueta</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Detalles</h5>
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Estado</dt>
+                            <dd class="col-sm-8">
+                                <span th:class="'badge ' + 
+                                    (${ticket.estado == 'ABIERTO' ? 'bg-warning' : 
+                                    ticket.estado == 'EN_PROGRESO' ? 'bg-primary' : 
+                                    ticket.estado == 'RESUELTO' ? 'bg-success' : 'bg-secondary'})"
+                                    th:text="${ticket.estado}">Estado</span>
+                            </dd>
+
+                            <dt class="col-sm-4">Prioridad</dt>
+                            <dd class="col-sm-8" th:text="${ticket.prioridad}">ALTA</dd>
+
+                            <dt class="col-sm-4">Categoría</dt>
+                            <dd class="col-sm-8" th:text="${ticket.categoria}">CONSULTA_DIETA</dd>
+
+                            <dt class="col-sm-4">Creado</dt>
+                            <dd class="col-sm-8" th:text="${#temporals.format(ticket.fechaCreacion, 'dd/MM/yyyy HH:mm')}">
+                                01/01/2024 10:00
+                            </dd>
+
+                            <dt class="col-sm-4">Actualizado</dt>
+                            <dd class="col-sm-8" th:text="${#temporals.format(ticket.fechaActualizacion, 'dd/MM/yyyy HH:mm')}">
+                                01/01/2024 11:00
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Respuestas -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Respuestas</h5>
+            </div>
+            <div class="card-body">
+                <!-- Lista de Respuestas -->
+                <div class="chat-container mb-4">
+                    <div th:each="respuesta : ${respuestas}" 
+                         th:class="'card respuesta-card ' + 
+                         (${respuesta.esRespuestaAutomatica ? 'automatica' : 
+                         respuesta.autor instanceof T(com.version.nutrition.model.Nutricionista) ? 'nutricionista' : 'paciente'})">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="card-subtitle mb-2 text-muted">
+                                    <i class="bi" th:classappend="${respuesta.esRespuestaAutomatica ? 
+                                        'bi-robot' : respuesta.autor instanceof T(com.version.nutrition.model.Nutricionista) ? 
+                                        'bi-person-badge' : 'bi-person'}"></i>
+                                    <span th:text="${respuesta.autor != null ? respuesta.autor.nombre : 'Sistema'}">Autor</span>
+                                </h6>
+                                <small class="text-muted" 
+                                       th:text="${#temporals.format(respuesta.fechaCreacion, 'dd/MM/yyyy HH:mm')}">
+                                    Fecha
+                                </small>
+                            </div>
+                            <p class="card-text" th:text="${respuesta.contenido}">Contenido de la respuesta...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulario de Nueva Respuesta -->
+                <form th:if="${ticket.estado != 'CERRADO'}" 
+                      th:action="@{/paciente/tickets/{id}/responder(id=${ticket.id})}" 
+                      method="post" 
+                      class="needs-validation" 
+                      novalidate>
+                    <div class="mb-3">
+                        <label for="contenido" class="form-label">Nueva Respuesta</label>
+                        <textarea class="form-control" id="contenido" name="contenido" rows="3" required></textarea>
+                        <div class="invalid-feedback">
+                            Por favor ingresa el contenido de tu respuesta.
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i> Enviar Respuesta
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Validación del formulario
+        (function() {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.from(forms).forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+
+        // Auto-scroll al final del chat
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatContainer = document.querySelector('.chat-container');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+    </script>
+</body>
+</html>

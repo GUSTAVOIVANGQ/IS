@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi Perfil</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .profile-image {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+        .profile-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">NutriSystem</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/paciente/dashboard}"><i class="bi bi-house"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/paciente/citas}"><i class="bi bi-calendar"></i> Mis Citas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/paciente/plan-actual}"><i class="bi bi-clipboard2-check"></i> Plan Nutricional</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Alertas -->
+        <div th:if="${mensaje}" class="alert alert-success" role="alert">
+            <span th:text="${mensaje}"></span>
+        </div>
+        <div th:if="${error}" class="alert alert-danger" role="alert">
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Encabezado -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Mi Perfil</h2>
+            <a th:href="@{/paciente/profile/editar}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Editar Perfil
+            </a>
+        </div>
+
+        <div class="row">
+            <!-- Columna de foto de perfil -->
+            <div class="col-md-4">
+                <div class="profile-section">
+                    <div class="text-center">
+                        <img th:src="${paciente.fotoPerfil != null && !paciente.fotoPerfil.isEmpty() ? 
+                                       '/uploads/profile-photos/' + paciente.fotoPerfil : 
+                                       '/img/default-avatar.png'}" 
+                             alt="Foto de perfil" class="profile-image mb-3">
+                        <h4 th:text="${paciente.nombre + ' ' + paciente.apellido}">Nombre Completo</h4>
+                        <button class="btn btn-outline-primary mb-3" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#photoModal">
+                            <i class="bi bi-camera"></i> Cambiar Foto
+                        </button>
+                    </div>
+                    <hr>
+                    <div class="mt-3">
+                        <p><strong>Estado de Cuenta:</strong> <span class="badge bg-success">Activo</span></p>
+                        <p><strong>Miembro desde:</strong> <span th:text="${#temporals.format(paciente.fechaRegistro, 'dd/MM/yyyy')}">01/01/2024</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna de información -->
+            <div class="col-md-8">
+                <!-- Información Personal -->
+                <div class="profile-section">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4>Información Personal</h4>
+                        <a th:href="@{/paciente/profile/editar}" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Editar
+                        </a>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="fw-bold">Nombre</label>
+                            <p th:text="${paciente.nombre}">Nombre</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="fw-bold">Apellido</label>
+                            <p th:text="${paciente.apellido}">Apellido</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="fw-bold">Email</label>
+                            <p th:text="${paciente.email}">email@ejemplo.com</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="fw-bold">Teléfono</label>
+                            <p th:text="${paciente.telefono}">123456789</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="fw-bold">Edad</label>
+                            <p th:text="${paciente.edad + ' años'}">30 años</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="fw-bold">Género</label>
+                            <p th:text="${paciente.genero}">Masculino</p>
+                        </div>
+                        <div class="col-12">
+                            <label class="fw-bold">Dirección</label>
+                            <p th:text="${paciente.direccion}">Dirección</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información Médica -->
+                <div class="profile-section">
+                    <h4 class="mb-3">Información Médica</h4>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="fw-bold">Peso Actual</label>
+                            <p th:text="${paciente.peso + ' kg'}">75.5 kg</p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="fw-bold">Estatura</label>
+                            <p th:text="${paciente.estatura + ' m'}">1.75 m</p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="fw-bold">IMC</label>
+                            <p th:text="${#numbers.formatDecimal(paciente.indiceMasaCorporal, 1, 1)}">24.5</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="fw-bold">Estado Nutricional</label>
+                            <p th:text="${paciente.estadoNutricional}">Normal</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="fw-bold">Grupo Sanguíneo</label>
+                            <p th:text="${paciente.grupoSanguineo ?: 'No especificado'}">O+</p>
+                        </div>
+                        <div class="col-12">
+                            <label class="fw-bold">Actividad Física</label>
+                            <p th:text="${paciente.actividadFisica}">Moderada</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Objetivos y Preferencias -->
+                <div class="profile-section">
+                    <h4 class="mb-3">Objetivos y Preferencias</h4>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="fw-bold">Objetivo Nutricional</label>
+                            <p th:text="${paciente.objetivoNutricional}">Pérdida de peso</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="fw-bold">Peso Objetivo</label>
+                            <p th:text="${paciente.pesoObjetivo + ' kg'}">70 kg</p>
+                        </div>
+                        <div class="col-12">
+                            <label class="fw-bold">Preferencias Alimenticias</label>
+                            <p th:text="${paciente.preferenciasAlimenticias ?: 'No especificadas'}">Preferencias</p>
+                        </div>
+                        <div class="col-12">
+                            <label class="fw-bold">Alergias</label>
+                            <p th:text="${paciente.alergias ?: 'Ninguna'}">Alergias</p>
+                        </div>
+                        <div class="col-12">
+                            <label class="fw-bold">Enfermedades Crónicas</label>
+                            <p th:text="${paciente.enfermedadesCronicas ?: 'Ninguna'}">Enfermedades</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para cambiar foto -->
+    <div class="modal fade" id="photoModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cambiar Foto de Perfil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form th:action="@{/paciente/profile/actualizar-foto}" 
+                          method="post" 
+                          enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="foto" class="form-label">Seleccionar nueva foto</label>
+                            <input type="file" class="form-control" id="foto" name="foto" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Subir Foto</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

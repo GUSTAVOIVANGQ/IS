@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial Médico - Sistema de Nutrición</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- Chart.js para gráficas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .metric-card {
+            border-left: 4px solid #0d6efd;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Sistema de Nutrición</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/nutricionista/dashboard}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" th:href="@{/nutricionista/pacientes}">Pacientes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/nutricionista/citas}">Citas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Encabezado -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>Historial Médico</h2>
+                <p class="text-muted" th:text="${paciente.nombre + ' ' + paciente.apellido}">Nombre del Paciente</p>
+            </div>
+            <div class="btn-group">
+                <a th:href="@{/nutricionista/pacientes/{id}(id=${paciente.id})}" class="btn btn-outline-primary">
+                    <i class="bi bi-eye"></i> Ver Detalles
+                </a>
+                <a th:href="@{/nutricionista/pacientes/{id}/editar(id=${paciente.id})}" class="btn btn-outline-warning">
+                    <i class="bi bi-pencil"></i> Editar
+                </a>
+                <a th:href="@{/nutricionista/pacientes}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+            </div>
+        </div>
+
+        <!-- Métricas Actuales -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h6 class="card-title">IMC Actual</h6>
+                        <h4 class="card-text" th:text="${#numbers.formatDecimal(paciente.imc, 1, 1)}">24.5</h4>
+                        <small class="text-muted" th:text="${paciente.estadoNutricional}">Normal</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h6 class="card-title">Peso Actual</h6>
+                        <h4 class="card-text" th:text="${paciente.peso + ' kg'}">75.5 kg</h4>
+                        <small class="text-muted">Última medición</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h6 class="card-title">Peso Objetivo</h6>
+                        <h4 class="card-text" th:text="${paciente.pesoObjetivo + ' kg'}">70.0 kg</h4>
+                        <small class="text-muted"
+                               th:text="${'Progreso: ' + #numbers.formatDecimal(paciente.calcularProgreso(), 0, 0) + '%'}">
+                            Progreso: 75%
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h6 class="card-title">Días de Seguimiento</h6>
+                        <h4 class="card-text" th:text="${paciente.diasSeguimiento}">30</h4>
+                        <small class="text-muted" th:text="${paciente.estadoSeguimiento}">Activo</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficas de Progreso -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Evolución del Peso</h5>
+                        <div class="chart-container">
+                            <canvas id="pesoChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Evolución del IMC</h5>
+                        <div class="chart-container">
+                            <canvas id="imcChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial de Mediciones -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Historial de Mediciones</h5>
+                <div class="table-responsive">
+                    <table id="tablaMediciones" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Peso (kg)</th>
+                                <th>IMC</th>
+                                <th>% Grasa Corporal</th>
+                                <th>Cintura (cm)</th>
+                                <th>Cadera (cm)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="medicion : ${historialMediciones}">
+                                <td th:text="${#temporals.format(medicion.fecha, 'dd/MM/yyyy')}">01/01/2024</td>
+                                <td th:text="${#numbers.formatDecimal(medicion.peso, 1, 1)}">75.5</td>
+                                <td th:text="${#numbers.formatDecimal(paciente.imc, 1, 1)}">24.5</td>
+                                <td th:text="${#numbers.formatDecimal(medicion.porcentajeGrasaCorporal, 1, 1) + '%'}">25.0%</td>
+                                <td th:text="${medicion.circunferenciaCintura}">85</td>
+                                <td th:text="${medicion.circunferenciaCadera}">95</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script th:inline="javascript">
+        // Datos para las gráficas
+        const historialMediciones = /*[[${historialMediciones}]]*/ [];
+        
+        // Preparar datos para las gráficas
+        const fechas = historialMediciones.map(m => m.fecha);
+        const pesos = historialMediciones.map(m => m.peso);
+        const imcs = historialMediciones.map(m => m.imc);
+
+        // Gráfica de peso
+        new Chart(document.getElementById('pesoChart'), {
+            type: 'line',
+            data: {
+                labels: fechas,
+                datasets: [{
+                    label: 'Peso (kg)',
+                    data: pesos,
+                    borderColor: '#0d6efd',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // Gráfica de IMC
+        new Chart(document.getElementById('imcChart'), {
+            type: 'line',
+            data: {
+                labels: fechas,
+                datasets: [{
+                    label: 'IMC',
+                    data: imcs,
+                    borderColor: '#198754',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // Inicializar DataTable
+        $(document).ready(function() {
+            $('#tablaMediciones').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+                },
+                order: [[0, 'desc']], // Ordenar por fecha descendente
+                pageLength: 10
+            });
+        });
+    </script>
+</body>
+</html>

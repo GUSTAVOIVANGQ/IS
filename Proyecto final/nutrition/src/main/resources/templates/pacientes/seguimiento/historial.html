@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Seguimiento</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .metric-card {
+            border-radius: 15px;
+            transition: transform 0.2s;
+            background: linear-gradient(45deg, #4CAF50, #81C784);
+            color: white;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        .trend-up { color: #dc3545; }
+        .trend-down { color: #198754; }
+        .chart-container {
+            height: 400px;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">NutriSystem</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/paciente/dashboard}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/paciente/citas}">Mis Citas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Seguimiento</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Encabezado -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Historial de Seguimiento</h2>
+            <a th:href="@{/paciente/seguimiento/registrar}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Registrar Nueva Medición
+            </a>
+        </div>
+
+        <!-- Métricas Principales -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2">IMC Actual</h6>
+                        <h3 class="card-title mb-0" th:text="${#numbers.formatDecimal(paciente.indiceMasaCorporal, 1, 1)}">25.0</h3>
+                        <small th:text="${paciente.estadoNutricional}">Normal</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2">Peso Actual</h6>
+                        <h3 class="card-title mb-0">
+                            <span th:text="${#numbers.formatDecimal(paciente.peso, 1, 1)}">70.0</span> kg
+                        </h3>
+                        <small th:if="${tendencias.tendenciaPeso}" th:text="'Variación: ' + 
+                            ${#numbers.formatDecimal(tendencias.tendenciaPeso, 1, 1)} + ' kg'">
+                            Variación: -2.0 kg
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2">% Grasa Corporal</h6>
+                        <h3 class="card-title mb-0" th:with="ultimoSeguimiento=${seguimientos[0]}" 
+                            th:text="${#numbers.formatDecimal(ultimoSeguimiento.porcentajeGrasaCorporal, 1, 1)} + '%'">
+                            25.0%
+                        </h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2">Progreso</h6>
+                        <h3 class="card-title mb-0" th:text="${#numbers.formatDecimal(paciente.calcularProgreso(), 1, 1)} + '%'">
+                            75.0%
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico de Evolución -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Evolución del Peso</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="evolucionPeso"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Historial -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Historial de Mediciones</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Peso (kg)</th>
+                                <th>IMC</th>
+                                <th>% Grasa</th>
+                                <th>Cintura (cm)</th>
+                                <th>Cadera (cm)</th>
+                                <th>Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="seguimiento : ${seguimientos}">
+                                <td th:text="${#temporals.format(seguimiento.fechaRegistro, 'dd/MM/yyyy HH:mm')}">01/01/2024</td>
+                                <td th:text="${#numbers.formatDecimal(seguimiento.peso, 1, 1)}">70.0</td>
+                                <td th:text="${#numbers.formatDecimal(seguimiento.imc, 1, 1)}">22.0</td>
+                                <td th:text="${#numbers.formatDecimal(seguimiento.porcentajeGrasaCorporal, 1, 1)} + '%'">25.0%</td>
+                                <td th:text="${#numbers.formatDecimal(seguimiento.circunferenciaCintura, 1, 1)}">80.0</td>
+                                <td th:text="${#numbers.formatDecimal(seguimiento.circunferenciaCadera, 1, 1)}">90.0</td>
+                                <td th:text="${seguimiento.observaciones}">Observaciones</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            // Obtener datos del modelo de Thymeleaf
+            const seguimientos = /*[[${seguimientos}]]*/ [];
+            
+            // Verificar si hay datos
+            if (seguimientos && seguimientos.length > 0) {
+                // Preparar datos para el gráfico
+                const datos = {
+                    labels: seguimientos.map(s => {
+                        const fecha = new Date(s.fechaRegistro);
+                        return fecha.toLocaleDateString('es-ES', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: '2-digit'
+                        });
+                    }),
+                    datasets: [{
+                        label: 'Peso (kg)',
+                        data: seguimientos.map(s => s.peso),
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                };
+
+                // Configuración del gráfico
+                const config = {
+                    type: 'line',
+                    data: datos,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                title: {
+                                    display: true,
+                                    text: 'Peso (kg)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Fecha'
+                                }
+                            }
+                        }
+                    }
+                };
+
+                // Crear el gráfico
+                const ctx = document.getElementById('evolucionPeso').getContext('2d');
+                new Chart(ctx, config);
+            }
+        });
+    </script>
+</body>
+</html>

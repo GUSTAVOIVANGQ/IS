@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selección de Registro - Sistema de Nutrición</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .selection-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .card {
+            transition: transform 0.3s ease;
+            margin: 10px;
+            cursor: pointer;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #0d6efd;
+        }
+        .feature-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .feature-list li {
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #198754;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="selection-container">
+            <div class="text-center mb-5">
+                <h2 class="text-primary">Elige tu tipo de cuenta</h2>
+                <p class="text-muted">Selecciona el tipo de cuenta que mejor se adapte a tus necesidades</p>
+            </div>
+
+            <div class="row">
+                <!-- Opción Paciente -->
+                <div class="col-md-6">
+                    <div class="card h-100" th:onclick="'location.href=\'' + @{/registro/paciente} + '\''">
+                        <div class="card-body text-center">
+                            <div class="card-icon">👤</div>
+                            <h3 class="card-title">Paciente</h3>
+                            <p class="card-text">Para personas que buscan mejorar su salud y nutrición</p>
+                            <ul class="feature-list text-start mt-4">
+                                <li>Seguimiento personalizado de tu progreso</li>
+                                <li>Acceso a planes nutricionales</li>
+                                <li>Agenda de citas con nutricionistas</li>
+                                <li>Registro de mediciones y objetivos</li>
+                            </ul>
+                            <div class="mt-4">
+                                <a th:href="@{/registro/paciente}" class="btn btn-primary">Registrarme como Paciente</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Opción Nutricionista -->
+                <div class="col-md-6">
+                    <div class="card h-100" onclick="location.href='/registro/nutricionista'">
+                        <div class="card-body text-center">
+                            <div class="card-icon">👨‍⚕️</div>
+                            <h3 class="card-title">Nutricionista</h3>
+                            <p class="card-text">Para profesionales de la nutrición</p>
+                            <ul class="feature-list text-start mt-4">
+                                <li>Gestión de pacientes</li>
+                                <li>Creación de planes nutricionales</li>
+                                <li>Control de citas y consultas</li>
+                                <li>Seguimiento de progreso de pacientes</li>
+                            </ul>
+                            <div class="mt-4">
+                                <a href="/registro/nutricionista" class="btn btn-primary">Registrarme como Nutricionista</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p>¿Ya tienes una cuenta? <a href="/login" class="text-decoration-none">Inicia sesión aquí</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

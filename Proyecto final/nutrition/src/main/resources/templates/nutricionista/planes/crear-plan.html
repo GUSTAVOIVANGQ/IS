@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Plan de Dieta - Sistema de Nutrición</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .form-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Sistema de Nutrición</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/nutricionista/dashboard}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/nutricionista/pacientes}">Pacientes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" th:href="@{/nutricionista/planes}">Planes</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Encabezado -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Crear Nuevo Plan de Dieta</h2>
+            <a th:href="@{/nutricionista/planes}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Volver a Planes
+            </a>
+        </div>
+
+        <!-- Alertas -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Formulario de Creación -->
+        <form th:action="@{/nutricionista/planes/crear}" method="post" th:object="${planDieta}" class="needs-validation" novalidate>
+            <input type="hidden" name="pacienteId" th:value="${pacienteId}">
+
+            <!-- Información Básica -->
+            <div class="form-section">
+                <h4>Información Básica</h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="nombre" class="form-label required-field">Nombre del Plan</label>
+                        <input type="text" class="form-control" id="nombre" th:field="*{nombre}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="objetivo" class="form-label required-field">Objetivo</label>
+                        <select class="form-select" id="objetivo" th:field="*{objetivo}" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="PERDIDA_PESO">Pérdida de Peso</option>
+                            <option value="GANANCIA_PESO">Ganancia de Peso</option>
+                            <option value="MANTENIMIENTO">Mantenimiento</option>
+                            <option value="RENDIMIENTO">Rendimiento Deportivo</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcion" th:field="*{descripcion}" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Objetivos Nutricionales -->
+            <div class="form-section">
+                <h4>Objetivos Nutricionales</h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="caloriasObjetivo" class="form-label required-field">Calorías Diarias</label>
+                        <input type="number" class="form-control" id="caloriasObjetivo" th:field="*{caloriasObjetivo}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="proteinasObjetivo" class="form-label">Proteínas (g)</label>
+                        <input type="number" class="form-control" id="proteinasObjetivo" th:field="*{proteinasObjetivo}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="carbohidratosObjetivo" class="form-label">Carbohidratos (g)</label>
+                        <input type="number" class="form-control" id="carbohidratosObjetivo" th:field="*{carbohidratosObjetivo}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="grasasObjetivo" class="form-label">Grasas (g)</label>
+                        <input type="number" class="form-control" id="grasasObjetivo" th:field="*{grasasObjetivo}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Restricciones -->
+            <div class="form-section">
+                <h4>Restricciones Alimentarias</h4>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="esVegetariano" th:field="*{esVegetariano}">
+                            <label class="form-check-label" for="esVegetariano">Vegetariano</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="esVegano" th:field="*{esVegano}">
+                            <label class="form-check-label" for="esVegano">Vegano</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="libreGluten" th:field="*{libreGluten}">
+                            <label class="form-check-label" for="libreGluten">Sin Gluten</label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label for="restriccionesAdicionales" class="form-label">Restricciones Adicionales</label>
+                        <textarea class="form-control" id="restriccionesAdicionales" th:field="*{restriccionesAdicionales}" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Observaciones -->
+            <div class="form-section">
+                <h4>Observaciones</h4>
+                <div class="row">
+                    <div class="col-12">
+                        <textarea class="form-control" id="observaciones" th:field="*{observaciones}" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex gap-2 justify-content-end">
+                <a th:href="@{/nutricionista/planes}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Crear Plan</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Validación del formulario
+        (function() {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.from(forms).forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
+</body>
+</html>

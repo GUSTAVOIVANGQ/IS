@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Citas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        .cita-card {
+            transition: transform 0.2s;
+            margin-bottom: 1rem;
+        }
+        .cita-card:hover {
+            transform: translateY(-5px);
+        }
+        .estado-badge {
+            font-size: 0.8rem;
+            padding: 0.5em 0.8em;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">NutriSystem</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/paciente/dashboard}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Mis Citas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/paciente/plan-actual}">Plan Nutricional</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Encabezado y Botón de Nueva Cita -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Mis Citas</h2>
+            <a th:href="@{/paciente/citas/crear}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nueva Cita
+            </a>
+        </div>
+
+        <!-- Alertas -->
+        <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${mensaje}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Lista de Citas -->
+        <div class="row">
+            <div th:each="cita : ${citas}" class="col-md-6">
+                <div class="card cita-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="card-title" th:text="${cita.nutricionista != null ? 
+                                    cita.nutricionista.nombre + ' ' + cita.nutricionista.apellido : 'Nutricionista no asignado'}">
+                                    Nombre Nutricionista
+                                </h5>
+                                <p class="text-muted mb-0" th:text="${#temporals.format(cita.fecha, 'dd/MM/yyyy HH:mm')}">
+                                    Fecha y Hora
+                                </p>
+                            </div>
+                            <span th:class="'badge estado-badge ' + 
+                                (${cita.estado == 'PENDIENTE' ? 'bg-warning' : 
+                                cita.estado == 'CONFIRMADA' ? 'bg-success' : 
+                                cita.estado == 'CANCELADA' ? 'bg-danger' : 'bg-secondary'})"
+                                th:text="${cita.estado}">
+                                Estado
+                            </span>
+                        </div>
+                        <p class="card-text">
+                            <strong>Tipo:</strong> <span th:text="${cita.tipoCita}">Tipo de Cita</span><br>
+                            <strong>Modalidad:</strong> <span th:text="${cita.esVirtual ? 'Virtual' : 'Presencial'}">Modalidad</span>
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a th:href="@{/paciente/citas/{id}(id=${cita.id})}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-eye"></i> Ver Detalles
+                            </a>
+                            <form th:if="${cita.estado == 'PENDIENTE' or cita.estado == 'CONFIRMADA'}"
+                                  th:action="@{/paciente/citas/{id}/cancelar(id=${cita.id})}" 
+                                  method="post" 
+                                  style="display: inline;">
+                                <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                        onclick="return confirm('¿Está seguro de cancelar esta cita?')">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </button>
+                            </form>
+                            <form th:action="@{/paciente/tickets/generar-desde-cita/{id}(id=${cita.id})}" 
+                                  method="post" 
+                                  style="display: inline;">
+                                <button type="submit" class="btn btn-info btn-sm">
+                                    <i class="bi bi-ticket"></i> Generar Ticket
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Mensaje cuando no hay citas -->
+            <div th:if="${#lists.isEmpty(citas)}" class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-calendar-x fs-4 d-block mb-2"></i>
+                    <p class="mb-0">No tienes citas programadas</p>
+                    <a th:href="@{/paciente/citas/crear}" class="btn btn-primary mt-3">Agendar Nueva Cita</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

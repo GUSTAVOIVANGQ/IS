@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del Plan - Sistema de Nutrición</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .plan-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .metric-card {
+            border-left: 4px solid #0d6efd;
+        }
+        .comida-card {
+            transition: transform 0.2s;
+        }
+        .comida-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Sistema de Nutrición</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/nutricionista/dashboard}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/nutricionista/pacientes}">Pacientes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" th:href="@{/nutricionista/planes}">Planes</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Encabezado -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 th:text="${plan.nombre}">Nombre del Plan</h2>
+                <p class="text-muted" th:text="${plan.descripcion}">Descripción del plan</p>
+            </div>
+            <div class="btn-group">
+                <a th:href="@{/nutricionista/planes/{id}/editar(id=${plan.id})}" class="btn btn-warning">
+                    <i class="bi bi-pencil"></i> Editar Plan
+                </a>
+                <a th:href="@{/nutricionista/planes}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+            </div>
+        </div>
+
+        <!-- Información General -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="plan-section">
+                    <h4>Detalles del Plan</h4>
+                    <div class="mb-3">
+                        <span class="badge bg-primary" th:text="${plan.objetivo}">Objetivo</span>
+                        <span class="badge" 
+                              th:classappend="${plan.activo ? 'bg-success' : 'bg-secondary'}"
+                              th:text="${plan.estado}">Estado</span>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Fecha Inicio:</small>
+                        <p th:text="${#temporals.format(plan.fechaInicio, 'dd/MM/yyyy')}">01/01/2024</p>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Fecha Fin:</small>
+                        <p th:text="${#temporals.format(plan.fechaFin, 'dd/MM/yyyy')}">01/02/2024</p>
+                    </div>
+                    <hr>
+                    <div class="mb-2">
+                        <small class="text-muted">Restricciones:</small>
+                        <div class="mt-2">
+                            <span class="badge bg-info" th:if="${plan.esVegetariano}">Vegetariano</span>
+                            <span class="badge bg-info" th:if="${plan.esVegano}">Vegano</span>
+                            <span class="badge bg-info" th:if="${plan.libreGluten}">Sin Gluten</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Métricas -->
+                <div class="plan-section">
+                    <h4>Métricas Nutricionales</h4>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="card metric-card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Calorías</h6>
+                                    <h4 class="card-text" th:text="${plan.caloriasObjetivo + ' kcal'}">2000 kcal</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card metric-card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Proteínas</h6>
+                                    <h4 class="card-text" th:text="${plan.proteinasObjetivo + ' g'}">80 g</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card metric-card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Carbohidratos</h6>
+                                    <h4 class="card-text" th:text="${plan.carbohidratosObjetivo + ' g'}">250 g</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card metric-card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Grasas</h6>
+                                    <h4 class="card-text" th:text="${plan.grasasObjetivo + ' g'}">65 g</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comidas del Plan -->
+            <div class="col-md-8">
+                <div class="plan-section">
+                    <h4>Comidas del Plan</h4>
+                    <div class="row g-4">
+                        <div th:each="comida : ${plan.comidas}" class="col-md-6">
+                            <div class="card comida-card h-100">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0" th:text="${comida.tipoComida}">Desayuno</h5>
+                                    <small class="text-muted" th:text="${comida.horaRecomendada}">08:00</small>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Alimento</th>
+                                                    <th>Cantidad</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="alimento : ${comida.alimentos}">
+                                                    <td th:text="${alimento.alimento.nombre}">Alimento</td>
+                                                    <td th:text="${alimento.cantidad + ' ' + alimento.unidadMedida}">100g</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="mt-3">
+                                        <small class="text-muted">Calorías totales:</small>
+                                        <span th:text="${comida.caloriasObjetivo + ' kcal'}">500 kcal</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Observaciones -->
+                <div class="plan-section">
+                    <h4>Observaciones</h4>
+                    <p th:text="${plan.observaciones ?: 'Sin observaciones registradas.'}">
+                        Observaciones del plan...
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

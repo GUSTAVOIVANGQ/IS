@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Tickets - Sistema de Nutrición</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .ticket-card {
+            transition: transform 0.2s;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+        }
+        .ticket-card:hover {
+            transform: translateY(-5px);
+        }
+        .ticket-card.prioridad-alta { border-left-color: #dc3545; }
+        .ticket-card.prioridad-media { border-left-color: #ffc107; }
+        .ticket-card.prioridad-baja { border-left-color: #0dcaf0; }
+        .estado-badge {
+            font-size: 0.8rem;
+            padding: 0.5em 0.8em;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">NutriSystem</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/paciente/dashboard}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/paciente/citas}">Mis Citas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Mis Tickets</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Encabezado y Botón de Nuevo Ticket -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Mis Tickets</h2>
+            <a th:href="@{/paciente/tickets/crear}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nuevo Ticket
+            </a>
+        </div>
+
+        <!-- Alertas -->
+        <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${mensaje}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Lista de Tickets -->
+        <div class="row">
+            <div th:each="ticket : ${tickets}" class="col-md-6">
+                <div th:class="'card ticket-card prioridad-' + ${ticket.prioridad?.toLowerCase()}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="card-title" th:text="${ticket.titulo}">Título del Ticket</h5>
+                                <p class="text-muted mb-0" th:text="${#temporals.format(ticket.fechaCreacion, 'dd/MM/yyyy HH:mm')}">
+                                    Fecha
+                                </p>
+                            </div>
+                            <span th:class="'badge estado-badge ' + 
+                                (${ticket.estado == 'ABIERTO' ? 'bg-warning' : 
+                                ticket.estado == 'EN_PROGRESO' ? 'bg-primary' : 
+                                ticket.estado == 'RESUELTO' ? 'bg-success' : 'bg-secondary'})"
+                                th:text="${ticket.estado}">
+                                Estado
+                            </span>
+                        </div>
+                        <p class="card-text" th:text="${#strings.length(ticket.descripcion) > 100 ? 
+                            #strings.substring(ticket.descripcion, 0, 97) + '...' : ticket.descripcion}">
+                            Descripción del ticket
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-info me-1" th:each="etiqueta : ${ticket.etiquetas}" 
+                                      th:text="${etiqueta}">Etiqueta</span>
+                            </div>
+                            <a th:href="@{/paciente/tickets/{id}(id=${ticket.id})}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-eye"></i> Ver Detalles
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Mensaje cuando no hay tickets -->
+            <div th:if="${#lists.isEmpty(tickets)}" class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-ticket-perforated fs-4 d-block mb-2"></i>
+                    <p class="mb-0">No tienes tickets creados</p>
+                    <a th:href="@{/paciente/tickets/crear}" class="btn btn-primary mt-3">Crear Nuevo Ticket</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

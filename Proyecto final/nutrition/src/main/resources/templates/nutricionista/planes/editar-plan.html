@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Plan de Dieta - Sistema de Nutrición</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .form-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+        .comida-card {
+            border-left: 4px solid #0d6efd;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Sistema de Nutrición</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/nutricionista/dashboard}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/nutricionista/pacientes}">Pacientes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" th:href="@{/nutricionista/planes}">Planes</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Encabezado -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Editar Plan de Dieta</h2>
+            <a th:href="@{/nutricionista/planes}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Volver a Planes
+            </a>
+        </div>
+
+        <!-- Alertas -->
+        <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${mensaje}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Formulario de Edición -->
+        <form th:action="@{/nutricionista/planes/{id}/editar(id=${plan.id})}" 
+              th:object="${plan}" 
+              method="post" 
+              class="needs-validation" 
+              th:data-plan-id="${plan.id}"
+              novalidate>
+            
+            <!-- Agregar el token CSRF -->
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            
+            <!-- Información Básica -->
+            <div class="form-section">
+                <h4>Información Básica</h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="nombre" class="form-label required-field">Nombre del Plan</label>
+                        <input type="text" class="form-control" id="nombre" th:field="*{nombre}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="objetivo" class="form-label required-field">Objetivo</label>
+                        <select class="form-select" id="objetivo" th:field="*{objetivo}" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="PERDIDA_PESO">Pérdida de Peso</option>
+                            <option value="GANANCIA_PESO">Ganancia de Peso</option>
+                            <option value="MANTENIMIENTO">Mantenimiento</option>
+                            <option value="RENDIMIENTO">Rendimiento Deportivo</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="estado" class="form-label required-field">Estado</label>
+                        <select class="form-select" id="estado" th:field="*{estado}" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="EN_CURSO">En Curso</option>
+                            <option value="COMPLETADO">Completado</option>
+                            <option value="SUSPENDIDO">Suspendido</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcion" th:field="*{descripcion}" rows="3"></textarea>
+                    </div>
+                    <!-- en editar-plan.html para incluir las fechas  -->
+                    <div class="col-md-6">
+                        <label for="fechaInicio" class="form-label required-field">Fecha de Inicio</label>
+                        <input type="date" class="form-control" id="fechaInicio" th:field="*{fechaInicio}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="fechaFin" class="form-label required-field">Fecha de Fin</label>
+                        <input type="date" class="form-control" id="fechaFin" th:field="*{fechaFin}" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Objetivos Nutricionales -->
+            <div class="form-section">
+                <h4>Objetivos Nutricionales</h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="caloriasObjetivo" class="form-label required-field">Calorías Diarias</label>
+                        <input type="number" class="form-control" id="caloriasObjetivo" th:field="*{caloriasObjetivo}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="proteinasObjetivo" class="form-label">Proteínas (g)</label>
+                        <input type="number" class="form-control" id="proteinasObjetivo" th:field="*{proteinasObjetivo}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="carbohidratosObjetivo" class="form-label">Carbohidratos (g)</label>
+                        <input type="number" class="form-control" id="carbohidratosObjetivo" th:field="*{carbohidratosObjetivo}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="grasasObjetivo" class="form-label">Grasas (g)</label>
+                        <input type="number" class="form-control" id="grasasObjetivo" th:field="*{grasasObjetivo}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comidas del Plan -->
+            <div class="form-section">
+                <h4>Comidas del Plan</h4>
+                <div class="row g-3">
+                    <div th:each="comida : *{comidas}" class="col-md-6">
+                        <div class="card comida-card">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0" th:text="${comida.tipoComida}">Tipo de Comida</h5>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                                            onclick="abrirModalAlimentos(this)" 
+                                            th:data-comida-id="${comida.id}">
+                                        <i class="bi bi-plus"></i> Agregar Alimento
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm" th:id="'tabla-comida-' + ${comida.id}">
+                                        <thead>
+                                            <tr>
+                                                <th>Alimento</th>
+                                                <th>Cantidad</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="alimento : ${comida.alimentos}" th:data-alimento-id="${alimento.id}">
+                                                <td th:text="${alimento.alimento.nombre}">Alimento</td>
+                                                <td th:text="${alimento.cantidad + ' ' + alimento.unidadMedida}">100g</td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                                            th:onclick="'eliminarAlimento(' + ${comida.id} + ', ' + ${alimento.id} + ')'">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Restricciones -->
+            <div class="form-section">
+                <h4>Restricciones Alimentarias</h4>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="esVegetariano" th:field="*{esVegetariano}">
+                            <label class="form-check-label" for="esVegetariano">Vegetariano</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="esVegano" th:field="*{esVegano}">
+                            <label class="form-check-label" for="esVegano">Vegano</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="libreGluten" th:field="*{libreGluten}">
+                            <label class="form-check-label" for="libreGluten">Sin Gluten</label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label for="restriccionesAdicionales" class="form-label">Restricciones Adicionales</label>
+                        <textarea class="form-control" id="restriccionesAdicionales" th:field="*{restriccionesAdicionales}" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex gap-2 justify-content-end">
+                <a th:href="@{/nutricionista/planes}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Modal para Agregar Alimentos -->
+    <div class="modal fade" id="modalAlimentos" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Agregar Alimento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Agregar mensaje de diagnóstico -->
+                    <div th:if="${alimentos == null}" class="alert alert-warning">
+                        La lista de alimentos es null
+                    </div>
+                    <div th:if="${alimentos != null and alimentos.empty}" class="alert alert-info">
+                        No hay alimentos registrados en la base de datos.
+                    </div>
+                    <div th:if="${alimentos != null and not alimentos.empty}" 
+                         class="alert alert-success" role="alert">
+                        Número de alimentos disponibles: <span th:text="${alimentos.size()}">0</span>
+                    </div>
+
+                    <form id="formAgregarAlimento" onsubmit="return false;">
+                        <input type="hidden" id="comidaId" name="comidaId">
+                        <div class="mb-3">
+                            <label for="alimentoId" class="form-label">Alimento</label>
+                            <select class="form-select" id="alimentoId" name="alimentoId" required>
+                                <option value="">Seleccionar alimento...</option>
+                                <option th:each="alimento : ${alimentos}"
+                                        th:value="${alimento.id}"
+                                        th:text="${alimento.nombre + ' (' + alimento.categoria + ')'}">
+                                    Nombre del Alimento
+                                </option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cantidad" class="form-label">Cantidad (g)</label>
+                            <input type="number" class="form-control" id="cantidad" name="cantidad" required min="0" step="0.1">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="agregarAlimento()">Agregar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let modalAlimentos;
+        let comidaIdActual;
+        const csrfToken = document.querySelector("input[name='_csrf']").value;
+        const csrfHeader = document.querySelector("input[name='_csrf']").getAttribute("name");
+
+        document.addEventListener('DOMContentLoaded', function() {
+            modalAlimentos = new bootstrap.Modal(document.getElementById('modalAlimentos'));
+            
+            // Inicializar el formulario
+            document.getElementById('formAgregarAlimento').addEventListener('submit', function(e) {
+                e.preventDefault();
+                agregarAlimento();
+            });
+        });
+
+        function abrirModalAlimentos(button) {
+            comidaIdActual = button.getAttribute('data-comida-id');
+            document.getElementById('comidaId').value = comidaIdActual;
+            modalAlimentos.show();
+        }
+
+        function agregarAlimento() {
+            const formData = new FormData(document.getElementById('formAgregarAlimento'));
+            const planId = document.querySelector('form').getAttribute('data-plan-id');
+            
+            fetch(`/nutricionista/planes/${planId}/agregar-alimento`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    [csrfHeader]: csrfToken
+                },
+                body: new URLSearchParams({
+                    comidaId: formData.get('comidaId'),
+                    alimentoId: formData.get('alimentoId'),
+                    cantidad: formData.get('cantidad'),
+                    [csrfHeader]: csrfToken
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const comidaId = formData.get('comidaId');
+                    const selectAlimento = document.getElementById('alimentoId');
+                    const nombreAlimento = selectAlimento.options[selectAlimento.selectedIndex].text;
+                    const cantidad = formData.get('cantidad');
+                    
+                    // Usar el ID único de la tabla
+                    const tabla = document.getElementById(`tabla-comida-${comidaId}`);
+                    if (tabla) {
+                        const tbody = tabla.querySelector('tbody');
+                        if (tbody) {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td>${nombreAlimento}</td>
+                                <td>${cantidad}g</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarAlimentoFila(this)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            `;
+                            tbody.appendChild(tr);
+                            modalAlimentos.hide();
+                            document.getElementById('formAgregarAlimento').reset();
+                        } else {
+                            console.error('No se encontró el tbody');
+                        }
+                    } else {
+                        console.error('No se encontró la tabla con ID:', `tabla-comida-${comidaId}`);
+                    }
+                } else {
+                    alert('Error al agregar alimento: ' + (data.error || 'Error desconocido'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al agregar alimento: ' + error.message);
+            });
+        }
+
+        function eliminarAlimento(comidaId, alimentoId) {
+            if (confirm('¿Está seguro de eliminar este alimento?')) {
+                const planId = document.querySelector('form').getAttribute('data-plan-id');
+                
+                fetch(`/nutricionista/planes/${planId}/eliminar-alimento`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        [csrfHeader]: csrfToken
+                    },
+                    body: new URLSearchParams({
+                        comidaId: comidaId,
+                        alimentoId: alimentoId,
+                        [csrfHeader]: csrfToken
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Eliminar la fila de la tabla
+                        const fila = document.querySelector(`tr[data-alimento-id="${alimentoId}"]`);
+                        if (fila) {
+                            fila.remove();
+                        }
+                    } else {
+                        alert('Error al eliminar alimento: ' + (data.error || 'Error desconocido'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al eliminar alimento: ' + error.message);
+                });
+            }
+        }
+
+        // Agregar validación para el estado
+        document.getElementById('estado').addEventListener('change', function() {
+            if (this.value === 'COMPLETADO') {
+                if (!confirm('¿Está seguro de marcar el plan como completado? Esto finalizará el seguimiento.')) {
+                    this.value = 'EN_CURSO';
+                }
+            }
+        });
+
+        function eliminarAlimentoFila(button) {
+            if (confirm('¿Está seguro de eliminar este alimento?')) {
+                const tr = button.closest('tr');
+                if (tr) {
+                    tr.remove();
+                }
+            }
+        }
+    </script>
+    <script>
+    // Formatear fechas para el input type="date"
+    document.addEventListener('DOMContentLoaded', function() {
+                    tr.remove();
+        const fechaInicio = document.getElementById('fechaInicio');
+        const fechaFin = document.getElementById('fechaFin');
+        
+        if (fechaInicio.value) {
+            fechaInicio.value = fechaInicio.value.split('T')[0];
+        }
+        if (fechaFin.value) {
+            fechaFin.value = fechaFin.value.split('T')[0];
+        }
+        
+        // Validar que la fecha fin no sea anterior a la fecha inicio
+        fechaFin.addEventListener('change', function() {
+            if (fechaInicio.value && this.value < fechaInicio.value) {
+                alert('La fecha de fin no puede ser anterior a la fecha de inicio');
+                this.value = fechaInicio.value;
+            }
+        });
+    });
+</script>
+</body>
+</html>
+
+                }
+            }
+        }
+    </script>
+</body>
+</html>

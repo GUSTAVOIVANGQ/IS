@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Nutricional</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            height: calc(100vh - 100px); /* Ajustado para mejor altura */
+            display: flex;
+            flex-direction: row; /* Cambiado a row para tener sidebar y chat lado a lado */
+            margin: 0;
+            border-radius: 0;
+        }
+        .chat-sidebar {
+            width: 300px;
+            border-right: 1px solid #dee2e6;
+            background: white;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%; /* Asegurar que ocupe todo el alto */
+            overflow: hidden; /* Evitar scroll en el contenedor principal */
+        }
+        .contact-item {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .contact-item:hover {
+            background-color: #f8f9fa;
+        }
+        .contact-item.selected {
+            background-color: #e9ecef;
+        }
+        .message {
+            max-width: 80%;
+            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            position: relative;
+            word-wrap: break-word; /* Para que los mensajes largos no se desborden */
+        }
+        .message.sent {
+            margin-left: auto;
+            background-color: #007bff;
+            color: white;
+        }
+        .message.received {
+            margin-right: auto;
+            background-color: #e9ecef;
+        }
+        .typing-indicator {
+            color: #6c757d;
+            font-style: italic;
+            font-size: 0.875rem;
+        }
+        .message-time {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+        .chat-input {
+            padding: 1rem;
+            background: white;
+            border-top: 1px solid #dee2e6;
+            margin-top: auto; /* Mantener al fondo */
+        }
+        .unread-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+        .user-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .user-status.online {
+            background-color: #28a745;
+        }
+        .user-status.offline {
+            background-color: #dc3545;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            min-height: 0; /* Importante para que el scroll funcione */
+        }
+        .container.mt-3 {
+            padding: 0;
+            max-width: 100%;
+        }
+        #messageArea::-webkit-scrollbar {
+            width: 6px;
+        }
+        #messageArea::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        #messageArea::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        #messageArea::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Chat Nutricional</a>
+            <div class="navbar-text text-white">
+                <span class="user-status online"></span>
+                <span th:text="${currentUser.nombre + ' ' + currentUser.apellido}">Usuario</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+        <div class="card chat-container">
+            <!-- Sidebar de contactos -->
+            <div class="chat-sidebar">
+                <div th:if="${userRole == 'ROLE_NUTRICIONISTA'}">
+                    <h5 class="mb-3">Mis Pacientes</h5>
+                    <div class="contact-list">
+                        <div th:if="${nutricionista.pacientes != null and !nutricionista.pacientes.empty}">
+                            <div th:each="paciente : ${nutricionista.pacientes}" 
+                                 class="contact-item" 
+                                 th:data-email="${paciente.email}">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-person-circle me-2"></i>
+                                    <div>
+                                        <div th:text="${paciente.nombre + ' ' + paciente.apellido}">Nombre Paciente</div>
+                                        <small class="text-muted" th:text="${paciente.email}">email@example.com</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${nutricionista.pacientes == null or nutricionista.pacientes.empty}" 
+                             class="text-muted">
+                            No hay pacientes disponibles
+                        </div>
+                    </div>
+                </div>
+                
+                <div th:if="${userRole == 'ROLE_PACIENTE'}">
+                    <h5 class="mb-3">Mi Nutricionista</h5>
+                    <div class="contact-list">
+                        <div class="contact-item" 
+                             th:data-email="${nutricionista.email}">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-person-badge me-2"></i>
+                                <div>
+                                    <div th:text="${nutricionista.nombre + ' ' + nutricionista.apellido}">
+                                        Nombre Nutricionista
+                                    </div>
+                                    <small class="text-muted" th:text="${nutricionista.email}">email@example.com</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Área principal del chat -->
+            <div class="chat-main">
+                <div class="chat-messages" id="messageArea">
+                    <!-- Historial de mensajes -->
+                    <div th:each="message : ${messages}" 
+                         th:class="'message ' + (${message.fromUser(currentUser.email)} ? 'sent' : 'received')">
+                        <div class="message-content" th:text="${message.content}"></div>
+                        <div class="message-time" 
+                             th:text="${#temporals.format(message.timestamp, 'HH:mm')}">12:00</div>
+                        <div th:if="${message.type == 'READ'}" class="message-status">
+                            <i class="bi bi-check2-all text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Indicador de escritura -->
+                <div class="typing-indicator ms-3 mb-2 d-none" id="typingIndicator">
+                    Escribiendo...
+                </div>
+
+                <!-- Formulario de entrada de mensajes -->
+                <div class="chat-input">
+                    <form id="messageForm" class="d-flex gap-2">
+                        <input type="text" 
+                               id="message" 
+                               class="form-control" 
+                               placeholder="Escribe un mensaje..." 
+                               autocomplete="off">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/webjars/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/2.3.4/stomp.min.js"></script>
+    <script th:inline="javascript">
+        const currentUser = {
+            email: /*[[${currentUser.email}]]*/ '',
+            nombre: /*[[${currentUser.nombre}]]*/ '',
+            id: /*[[${currentUser.id}]]*/ ''
+        };
+        let stompClient = null;
+        let typingTimeout = null;
+        let selectedRecipient = null;
+
+        // Conectar automáticamente con el primer contacto al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            connect();
+            
+            // Seleccionar automáticamente el primer contacto
+            const firstContact = document.querySelector('.contact-item');
+            if (firstContact) {
+                const email = firstContact.dataset.email;
+                selectContact(email);
+                firstContact.classList.add('selected');
+            }
+            
+            // Agregar manejadores de eventos para los contactos
+            document.querySelectorAll('.contact-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const email = this.dataset.email;
+                    selectContact(email);
+                });
+            });
+        });
+
+        function connect() {
+            const socket = new SockJS('/ws-chat');
+            stompClient = Stomp.over(socket);
+            
+            stompClient.connect({}, function(frame) {
+                console.log('Connected: ' + frame);
+                
+                // Suscribirse a mensajes personales
+                stompClient.subscribe('/user/queue/messages', onMessageReceived);
+                
+                // Suscribirse a notificaciones de escritura
+                stompClient.subscribe('/user/queue/typing', onTypingReceived);
+                
+                // Enviar mensaje de conexión
+                sendMessage({
+                    type: 'JOIN',
+                    sender: currentUser
+                });
+            });
+        }
+
+        // Modificar la función sendMessage para validar el tipo de mensaje
+        function sendMessage(message) {
+            if (!selectedRecipient) {
+                alert('Por favor selecciona un contacto primero');
+                return;
+            }
+            
+            const messageToSend = {
+                content: message.content,
+                sender: currentUser.email,
+                recipient: selectedRecipient,
+                type: message.type
+            };
+
+            // Solo enviar al servidor y NO mostrar localmente
+            if (message.type === 'CHAT' && message.content) {
+                stompClient.send("/app/chat.send", {}, JSON.stringify(messageToSend));
+                // Removemos la visualización local aquí, ya que el mensaje volverá por el websocket
+            } else if (message.type === 'TYPING') {
+                stompClient.send("/app/chat.typing", {}, JSON.stringify(messageToSend));
+            }
+        }
+
+        function onMessageReceived(payload) {
+            const message = JSON.parse(payload.body);
+            if (message && (message.sender === currentUser.email || message.sender === selectedRecipient)) {
+                displayMessage(message);
+            }
+        }
+
+        function onTypingReceived(payload) {
+            const message = JSON.parse(payload.body);
+            if (message.sender !== currentUser) {
+                showTypingIndicator();
+            }
+        }
+
+        // Modificar displayMessage para evitar duplicados
+        function displayMessage(message) {
+            if (message.type !== 'CHAT' || !message.content) {
+                return;
+            }
+
+            const messageArea = document.getElementById('messageArea');
+            
+            // Verificar si el mensaje ya existe
+            const messageId = `msg-${message.timestamp}`;
+            if (document.getElementById(messageId)) {
+                return; // Si el mensaje ya existe, no lo mostrar de nuevo
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.id = messageId; // Agregar ID único al mensaje
+            messageDiv.className = `message ${message.sender === currentUser.email ? 'sent' : 'received'}`;
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.textContent = message.content;
+            
+            const time = document.createElement('div');
+            time.className = 'message-time';
+            time.textContent = new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            messageDiv.appendChild(content);
+            messageDiv.appendChild(time);
+            messageArea.appendChild(messageDiv);
+            
+            // Mejorar el scroll al último mensaje
+            requestAnimationFrame(() => {
+                messageArea.scrollTop = messageArea.scrollHeight;
+            });
+        }
+
+        function showTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            indicator.classList.remove('d-none');
+            
+            if (typingTimeout) {
+                clearTimeout(typingTimeout);
+            }
+            
+            typingTimeout = setTimeout(() => {
+                indicator.classList.add('d-none');
+            }, 1000);
+        }
+
+        // Eventos del formulario
+        document.getElementById('messageForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const messageInput = document.getElementById('message');
+            const content = messageInput.value.trim();
+            
+            if (content && selectedRecipient) {
+                sendMessage({
+                    content: content,
+                    type: 'CHAT'
+                });
+                messageInput.value = '';
+            }
+        });
+
+        // Modificar el evento de escritura para incluir un debounce
+        document.getElementById('message').addEventListener('input', function() {
+            if (typingTimeout) {
+                clearTimeout(typingTimeout);
+            }
+            
+            typingTimeout = setTimeout(() => {
+                if (this.value.trim()) {
+                    sendMessage({
+                        type: 'TYPING',
+                        sender: currentUser
+                    });
+                }
+            }, 500); // Esperar 500ms antes de enviar el evento de typing
+        });
+
+        // Conectar al cargar la página
+        document.addEventListener('DOMContentLoaded', connect);
+
+        // Agregar manejador de eventos para los contactos
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.contact-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const email = this.dataset.email;
+                    selectContact(email);
+                });
+            });
+        });
+
+        function selectContact(email) {
+            selectedRecipient = email;
+            // Actualizar UI para mostrar contacto seleccionado
+            document.querySelectorAll('.contact-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.querySelector(`[data-email="${email}"]`).classList.add('selected');
+            
+            // Cargar historial de mensajes
+            fetch(`/api/chat/history?otherUser=${email}`)
+                .then(response => response.json())
+                .then(messages => {
+                    const messageArea = document.getElementById('messageArea');
+                    messageArea.innerHTML = ''; // Limpiar mensajes anteriores
+                    messages.forEach(message => displayMessage(message));
+                });
+
+            // Habilitar el input de mensaje
+            document.getElementById('message').disabled = false;
+        }
+
+        // Deshabilitar el input de mensaje hasta que se seleccione un contacto
+        document.getElementById('message').disabled = true;
+
+    </script>
+</body>
+</html>

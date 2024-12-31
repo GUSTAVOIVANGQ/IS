@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Nutricionista - Sistema de Nutrición</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .registro-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .form-section {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="registro-container">
+            <h2 class="text-center text-primary mb-4">Registro de Nutricionista</h2>
+            
+            <form th:action="@{/registro/nutricionista}" th:object="${nutricionista}" method="post" class="needs-validation" novalidate>
+                
+                <!-- Información Personal -->
+                <div class="form-section">
+                    <h4 class="mb-3">Información Personal</h4>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="nombre" class="form-label required-field">Nombre</label>
+                            <input type="text" class="form-control" id="nombre" th:field="*{nombre}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="apellido" class="form-label required-field">Apellido</label>
+                            <input type="text" class="form-control" id="apellido" th:field="*{apellido}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label required-field">Email</label>
+                            <input type="email" class="form-control" id="email" th:field="*{email}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="password" class="form-label required-field">Contraseña</label>
+                            <input type="password" class="form-control" id="password" th:field="*{password}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="telefono" class="form-label required-field">Teléfono</label>
+                            <input type="tel" class="form-control" id="telefono" th:field="*{telefono}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información Profesional -->
+                <div class="form-section">
+                    <h4 class="mb-3">Información Profesional</h4>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="numeroLicencia" class="form-label required-field">Número de Licencia</label>
+                            <input type="text" class="form-control" id="numeroLicencia" th:field="*{numeroLicencia}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="universidad" class="form-label required-field">Universidad</label>
+                            <input type="text" class="form-control" id="universidad" th:field="*{universidad}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="añosExperiencia" class="form-label">Años de Experiencia</label>
+                            <input type="number" class="form-control" id="añosExperiencia" th:field="*{añosExperiencia}">
+                        </div>
+                        <div class="col-12">
+                            <label for="especialidades" class="form-label required-field">Especialidades</label>
+                            <select class="form-select" id="especialidades" th:field="*{especialidades}" multiple required>
+                                <option value="DEPORTIVA">Nutrición Deportiva</option>
+                                <option value="CLINICA">Nutrición Clínica</option>
+                                <option value="PEDIATRICA">Nutrición Pediátrica</option>
+                                <option value="GERIATRICA">Nutrición Geriátrica</option>
+                                <option value="BARIATRICA">Nutrición Bariátrica</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="descripcionProfesional" class="form-label">Descripción Profesional</label>
+                            <textarea class="form-control" id="descripcionProfesional" th:field="*{descripcionProfesional}" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información de Consulta -->
+                <div class="form-section">
+                    <h4 class="mb-3">Información de Consulta</h4>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label for="direccionConsultorio" class="form-label required-field">Dirección del Consultorio</label>
+                            <input type="text" class="form-control" id="direccionConsultorio" th:field="*{direccionConsultorio}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="horarioAtencion" class="form-label required-field">Horario de Atención</label>
+                            <input type="text" class="form-control" id="horarioAtencion" th:field="*{horarioAtencion}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="tarifaConsulta" class="form-label required-field">Tarifa de Consulta</label>
+                            <input type="number" step="0.01" class="form-control" id="tarifaConsulta" th:field="*{tarifaConsulta}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="duracionConsultaMinutos" class="form-label required-field">Duración de Consulta (minutos)</label>
+                            <input type="number" class="form-control" id="duracionConsultaMinutos" th:field="*{duracionConsultaMinutos}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="disponibleConsultaOnline" th:field="*{disponibleConsultaOnline}">
+                                <label class="form-check-label" for="disponibleConsultaOnline">
+                                    Disponible para consultas online
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary btn-lg" type="submit">Registrarme</button>
+                    <a href="/registro" class="btn btn-outline-secondary">Volver</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Validación del formulario
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
+</body>
+</html>
