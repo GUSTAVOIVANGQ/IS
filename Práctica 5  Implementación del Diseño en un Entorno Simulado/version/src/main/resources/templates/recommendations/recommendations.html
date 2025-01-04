@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Recomendaciones Personalizadas</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/home">Book & Movie Recommendations</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/books">Books</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/movies">Movies</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" href="/admin/dashboard">Admin Panel</a>
+                    </li>
+                    <!-- Agregar enlace al historial -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/history">
+                            <i class="bi bi-clock-history"></i> Historial
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <form class="d-flex me-3" th:action="@{/books/search}" method="get">
+                        <div class="input-group">
+                            <input class="form-control me-2" type="search" placeholder="Search books..." 
+                                   name="query" th:value="${searchQuery}" required>
+                               <button class="btn btn-outline-light" type="submit"><i class="bi bi-search"></i></button>
+                        </div>
+                    </form>                    
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="userMenu" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle"></i> 
+                            <span sec:authentication="name"></span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                            <li><a class="dropdown-item" href="/user/profile"><i class="bi bi-person"></i> Profile</a></li>
+                            <li><a class="dropdown-item" href="/favorites"><i class="bi bi-heart"></i> My Favorites</a></li>
+                            <li><a class="dropdown-item" href="/history"><i class="bi bi-clock-history"></i> History</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post" class="dropdown-item">
+                                    <button type="submit" class="btn btn-link text-decoration-none p-0">
+                                        <i class="bi bi-box-arrow-right"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col">
+                <h2>Recomendaciones Personalizadas</h2>
+                <p class="text-muted">Basado en tus favoritos y búsquedas recientes</p>
+            </div>
+        </div>
+
+        <!-- Book Recommendations -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h3 class="mb-4">Libros Recomendados</h3>
+                <div class="row row-cols-1 row-cols-md-4 g-4">
+                    <div class="col" th:if="${not #lists.isEmpty(bookRecommendations)}" 
+                         th:each="recommendation : ${bookRecommendations}">
+                        <div class="card h-100">
+                            <img th:if="${recommendation.imageUrl}" 
+                                 th:src="${recommendation.imageUrl}" 
+                                 class="card-img-top" 
+                                 th:alt="${recommendation.title}">
+                            <div class="card-body">
+                                <h5 class="card-title" th:text="${recommendation.title}">Título del Libro</h5>
+                                <p class="card-text" th:text="${recommendation.author}">Autor</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <a th:href="@{/books/details/{id}(id=${recommendation.contentId})}" 
+                                       class="btn btn-sm btn-primary">Ver Detalles</a>
+                                    <small class="text-muted" 
+                                           th:text="${#numbers.formatDecimal(recommendation.relevanceScore * 100, 1, 1)} + '% Match'">
+                                        Match
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12" th:if="${#lists.isEmpty(bookRecommendations)}">
+                        <p class="text-center text-muted">No hay recomendaciones de libros disponibles</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Show Recommendations -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h3 class="mb-4">Series y Películas Recomendadas</h3>
+                <div class="row row-cols-1 row-cols-md-4 g-4">
+                    <div class="col" th:if="${not #lists.isEmpty(showRecommendations)}"
+                         th:each="recommendation : ${showRecommendations}">
+                        <div class="card h-100">
+                            <img th:if="${recommendation.imageUrl}" 
+                                 th:src="${recommendation.imageUrl}" 
+                                 class="card-img-top" 
+                                 th:alt="${recommendation.title}">
+                            <div class="card-body">
+                                <h5 class="card-title" th:text="${recommendation.title}">Título</h5>
+                                <p class="card-text" th:text="${recommendation.description}">Descripción</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <a th:href="@{/movies/details/{id}(id=${recommendation.contentId})}" 
+                                       class="btn btn-sm btn-primary">Ver Detalles</a>
+                                    <small class="text-muted" 
+                                           th:text="${#numbers.formatDecimal(recommendation.relevanceScore, 1, 1)} + '% Match'">
+                                        Match
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12" th:if="${#lists.isEmpty(showRecommendations)}">
+                        <p class="text-center text-muted">No hay recomendaciones de series o películas disponibles</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

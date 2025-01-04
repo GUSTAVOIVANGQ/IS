@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <title>Home - Book & Movie Recommendations</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        .favorite-btn {
+            transition: all 0.3s ease;
+        }
+        .favorite-btn.is-favorite {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+        .favorite-btn:hover {
+            transform: scale(1.05);
+        }
+        .recommendation-card {
+            transition: transform 0.2s;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .recommendation-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .relevance-score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        .content-image {
+            height: 250px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/home">Book & Movie Recommendations</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/books">Books</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/movies">Movies</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" href="/admin/dashboard">Admin Panel</a>
+                    </li>
+                    <!-- Agregar enlace al historial -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/history">
+                            <i class="bi bi-clock-history"></i> Historial
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <form class="d-flex me-3" th:action="@{/books/search}" method="get">
+                        <div class="input-group">
+                            <input class="form-control me-2" type="search" placeholder="Search books..." 
+                                   name="query" th:value="${searchQuery}" required>
+                               <button class="btn btn-outline-light" type="submit"><i class="bi bi-search"></i></button>
+                        </div>
+                    </form>                    
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="userMenu" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle"></i> 
+                            <span sec:authentication="name"></span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                            <li><a class="dropdown-item" href="/user/profile"><i class="bi bi-person"></i> Profile</a></li>
+                            <li><a class="dropdown-item" href="/favorites"><i class="bi bi-heart"></i> My Favorites</a></li>
+                            <li><a class="dropdown-item" href="/history"><i class="bi bi-clock-history"></i> History</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post" class="dropdown-item">
+                                    <button type="submit" class="btn btn-link text-decoration-none p-0">
+                                        <i class="bi bi-box-arrow-right"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container my-4">
+        <!-- Debug Info -->
+<!--        <div class="alert alert-info mb-4">
+            <h4>Debug Information</h4>
+            <ul>
+                <li>User Name: <span th:text="${userName}">-</span></li>
+                <li>Has Recommendations: <span th:text="${hasRecommendations}">-</span></li>
+                <li>Featured Books Count: <span th:text="${featuredBooks != null ? featuredBooks.size() : 0}">-</span></li>
+                <li>Featured Shows Count: <span th:text="${featuredShows != null ? featuredShows.size() : 0}">-</span></li>
+            </ul>
+        </div>
+-->
+        <!-- Welcome Message with Recommendations -->
+        <div class="alert alert-info mb-4" th:if="${hasRecommendations}">
+            <h4 class="alert-heading">¡Bienvenido de vuelta, <span th:text="${userName}">Usuario</span>!</h4>
+            <p>Hemos preparado algunas recomendaciones basadas en tu historial y favoritos.</p>
+            <hr>
+            <p class="mb-0">
+                <a href="/recommendations/recommendations" class="btn btn-info">
+                    <i class="bi bi-lightning-fill"></i> Ver todas mis recomendaciones
+                </a>
+            </p>
+        </div>
+
+        <!-- Debug info - Remove in production -->
+<!--        <div class="alert alert-secondary" th:if="${userName != null}">
+            <p>Debug Info:</p>
+            <p>User Name: <span th:text="${userName}"></span></p>
+            <p>Has Recommendations: <span th:text="${hasRecommendations}"></span></p>
+        </div>
+-->
+        <!-- Recommendations Sections -->
+        <div class="row mb-4">
+            <!-- Book Recommendations -->
+            <div class="col-12 mb-5" th:if="${featuredBooks != null and not #lists.isEmpty(featuredBooks)}">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h2>Libros Recomendados</h2>
+                        <p class="text-muted">Basado en tus preferencias y búsquedas recientes</p>
+                    </div>
+                    <a href="/recommendations/recommendations" class="btn btn-primary">
+                        <i class="bi bi-book"></i> Ver más recomendaciones
+                    </a>
+                </div>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+                    <div class="col" th:each="book : ${featuredBooks}">
+                        <div class="card h-100 recommendation-card">
+                            <div class="position-relative">
+                                <span class="relevance-score" th:if="${book.rating != null}">
+                                    <i class="bi bi-star-fill"></i> 
+                                    <span th:text="${#numbers.formatDecimal(T(Double).parseDouble(book.rating),1,1)}">4.5</span>
+                                </span>
+                                <img th:src="${book.coverUrl}" class="card-img-top content-image"
+                                     th:alt="${book.title}">
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title" th:text="${book.title}">Título</h5>
+                                <p class="card-text">
+                                    <small class="text-muted" th:text="${book.author}">Autor</small>
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <button class="btn btn-sm btn-outline-primary favorite-btn"
+                                    th:data-type="book"
+                                    th:data-id="${book.isbn}">
+                                        <i class="bi bi-heart-fill"></i>
+                                    </button>
+                                    <a th:href="@{/books/details/{isbn}(isbn=${book.isbn})}" 
+                                       class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-info-circle"></i> Detalles
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shows Recommendations -->
+            <div class="col-12 mb-5" th:if="${featuredShows != null and not #lists.isEmpty(featuredShows)}">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h2>Series y Películas Recomendadas</h2>
+                        <p class="text-muted">Contenido que podría interesarte</p>
+                    </div>
+                    <a href="/recommendations/recommendations" class="btn btn-success">
+                        <i class="bi bi-film"></i> Ver más recomendaciones
+                    </a>
+                </div>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+                    <div class="col" th:each="show : ${featuredShows}">
+                        <div class="card h-100 recommendation-card">
+                            <div class="position-relative">
+                                <span class="relevance-score" th:if="${show.rating != null}">
+                                    <i class="bi bi-star-fill"></i> 
+                                    <span th:text="${#numbers.formatDecimal(show.rating.average,1,1)}">4.5</span>
+                                </span>
+                                <img th:if="${show.image}" th:src="${show.image.medium}"
+                                     class="card-img-top content-image" th:alt="${show.name}">
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title" th:text="${show.name}">Título</h5>
+                                <p class="card-text">
+                                    <small class="text-muted" th:text="${#strings.listJoin(show.genres, ', ')}">
+                                        Géneros
+                                    </small>
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <button class="btn btn-sm btn-outline-primary favorite-btn"
+                                    th:data-type="show"
+                                    th:data-id="${show.id}">
+                                        <i class="bi bi-heart-fill"></i>
+                                    </button>
+                                    <a th:href="@{/movies/details/{id}(id=${show.id})}" 
+                                       class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-info-circle"></i> Detalles
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Recommendations Message -->
+        <div class="text-center py-5" 
+             th:if="${(featuredBooks == null or #lists.isEmpty(featuredBooks)) and 
+                     (featuredShows == null or #lists.isEmpty(featuredShows))}">
+            <i class="bi bi-emoji-smile display-1 text-muted"></i>
+            <h3 class="mt-3">¡Comienza a explorar!</h3>
+            <p class="text-muted">Busca y guarda contenido en favoritos para obtener recomendaciones personalizadas.</p>
+            <div class="mt-4">
+                <a href="/books" class="btn btn-primary me-2">
+                    <i class="bi bi-book"></i> Explorar Libros
+                </a>
+                <a href="/movies" class="btn btn-success">
+                    <i class="bi.bi-film"></i> Explorar Series y Películas
+                </a>
+            </div>
+        </div>
+
+        <!-- Categories Section -->
+        <section class="mb-5">
+            <h2 class="mb-4">Browse Categories</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="card text-white bg-primary">
+                        <div class="card-body">
+                            <h5 class="card-title">Fiction Books</h5>
+                            <p class="card-text">Explore our fiction collection</p>
+                            <a href="/books/fiction" class="btn btn-light">Browse</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card text-white bg-success">
+                        <div class="card-body">
+                            <h5 class="card-title">Non-Fiction</h5>
+                            <p class="card-text">Discover non-fiction titles</p>
+                            <a href="/books/non-fiction" class="btn btn-light">Browse</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card text-white bg-info">
+                        <div class="card-body">
+                            <h5 class="card-title">Action Movies</h5>
+                            <p class="card-text">Watch thrilling action films</p>
+                            <a href="/movies/action" class="btn btn-light">Browse</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card text-white bg-warning">
+                        <div class="card-body">
+                            <h5 class="card-title">Drama Movies</h5>
+                            <p class="card-text">Experience dramatic cinema</p>
+                            <a href="/movies/drama" class="btn btn-light">Browse</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">© 2024 Book & Movie Recommendations. All rights reserved.</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript para manejo de favoritos -->
+    <script>
+        document.addEventListener('DOMContentLoaded', initializeFavorites);
+
+        function initializeFavorites() {
+            const favoriteButtons = document.querySelectorAll('.favorite-btn');
+            favoriteButtons.forEach(button => {
+                const type = button.getAttribute('data-type');
+                const id = button.getAttribute('data-id');
+                checkFavoriteStatus(type, id, button);
+            });
+        }
+
+        function toggleFavorite(type, id, button) {
+            const isFavorite = button.classList.contains('is-favorite');
+            const method = isFavorite ? 'DELETE' : 'POST';
+            const url = isFavorite ? 
+                `/favorites/${id}` : 
+                `/favorites/${type}s/${id}`;
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    updateFavoriteButton(button, !isFavorite);
+                } else {
+                    throw new Error('Failed to update favorite');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating favorites. Please try again.');
+            });
+        }
+
+        function checkFavoriteStatus(type, id, button) {
+            fetch(`/favorites/check/${id}`)
+                .then(response => response.json())
+                .then(isFavorite => {
+                    updateFavoriteButton(button, isFavorite);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function updateFavoriteButton(button, isFavorite) {
+            if (isFavorite) {
+                button.classList.add('is-favorite');
+            } else {
+                button.classList.remove('is-favorite');
+            }
+        }
+            document.addEventListener('DOMContentLoaded', function() {
+            // Add click handlers to all favorite buttons
+            document.querySelectorAll('.favorite-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const type = this.getAttribute('data-type');
+                    const id = this.getAttribute('data-id');
+                    toggleFavorite(type, id, this);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
