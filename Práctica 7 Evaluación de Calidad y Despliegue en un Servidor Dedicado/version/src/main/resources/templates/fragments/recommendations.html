@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Recommendation Fragments</title>
+</head>
+<body>
+    <!-- Book Recommendation Card -->
+    <div th:fragment="book-card(book, cardSize)" class="card h-100 recommendation-card">
+        <div class="position-relative">
+            <span class="relevance-score" th:if="${book.rating}">
+                <i class="bi bi-star-fill"></i> 
+                <span th:text="${#numbers.formatDecimal(book.rating,1,1)}">4.5</span>
+            </span>
+            <img th:src="${book.coverUrl}" 
+                 th:class="${'card-img-top content-image-' + cardSize}"
+                 th:alt="${book.title}">
+        </div>
+        <div class="card-body">
+            <h5 class="card-title" th:text="${book.title}">Título del Libro</h5>
+            <p class="card-text">
+                <small class="text-muted" th:text="${book.author}">Autor</small>
+            </p>
+            <div class="d-flex justify-content-between align-items-center">
+                <button class="btn btn-sm btn-outline-primary favorite-btn"
+                        th:onclick="'toggleFavorite(\'book\', \'' + ${book.isbn} + '\', this)'">
+                    <i class="bi bi-heart-fill"></i>
+                </button>
+                <a th:href="@{/books/details/{isbn}(isbn=${book.isbn})}" 
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-info-circle"></i> Detalles
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Show Recommendation Card -->
+    <div th:fragment="show-card(show, cardSize)" class="card h-100 recommendation-card">
+        <div class="position-relative">
+            <span class="relevance-score" th:if="${show.rating}">
+                <i class="bi bi-star-fill"></i> 
+                <span th:text="${#numbers.formatDecimal(show.rating.average,1,1)}">4.5</span>
+            </span>
+            <img th:if="${show.image}" 
+                 th:src="${show.image.medium}"
+                 th:class="${'card-img-top content-image-' + cardSize}" 
+                 th:alt="${show.name}">
+        </div>
+        <div class="card-body">
+            <h5 class="card-title" th:text="${show.name}">Título</h5>
+            <p class="card-text">
+                <small class="text-muted" th:text="${#strings.listJoin(show.genres, ', ')}">
+                    Géneros
+                </small>
+            </p>
+            <div class="d-flex justify-content-between align-items-center">
+                <button class="btn btn-sm btn-outline-primary favorite-btn"
+                        th:onclick="'toggleFavorite(\'show\', \'' + ${show.id} + '\', this)'">
+                    <i class="bi bi-heart-fill"></i>
+                </button>
+                <a th:href="@{/movies/details/{id}(id=${show.id})}" 
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-info-circle"></i> Detalles
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State Message -->
+    <div th:fragment="empty-state(type)" class="text-center py-5">
+        <i th:class="${type == 'book' ? 'bi bi-book' : 'bi bi-film'} + ' display-1 text-muted'"></i>
+        <h3 class="mt-3" th:text="${type == 'book' ? 'No hay recomendaciones de libros' : 'No hay recomendaciones de contenido audiovisual'}">
+            No hay recomendaciones
+        </h3>
+        <p class="text-muted">Agrega contenido a favoritos para obtener recomendaciones personalizadas</p>
+        <a th:href="${type == 'book' ? '/books' : '/movies'}" 
+           th:class="'btn btn-' + ${type == 'book' ? 'primary' : 'success'}">
+            <i th:class="${type == 'book' ? 'bi bi-book' : 'bi bi-film'}"></i>
+            <span th:text="${type == 'book' ? 'Explorar Libros' : 'Explorar Series y Películas'}">
+                Explorar
+            </span>
+        </a>
+    </div>
+
+    <!-- Grid Container -->
+    <div th:fragment="recommendation-grid(items, type, columns)" 
+         th:class="'row row-cols-1 row-cols-md-' + ${columns} + ' g-4'">
+        <div class="col" th:each="item : ${items}">
+            <div th:replace="${type == 'book'} ? 
+                ~{::book-card(${item}, 'md')} : 
+                ~{::show-card(${item}, 'md')}">
+            </div>
+        </div>
+    </div>
+
+    <!-- CSS Styles -->
+    <style th:fragment="recommendation-styles">
+        .recommendation-card {
+            transition: transform 0.2s;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .recommendation-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .relevance-score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        .content-image-sm { height: 200px; }
+        .content-image-md { height: 250px; }
+        .content-image-lg { height: 300px; }
+        .content-image-sm, .content-image-md, .content-image-lg {
+            object-fit: cover;
+            width: 100%;
+        }
+    </style>
+</body>
+</html>
