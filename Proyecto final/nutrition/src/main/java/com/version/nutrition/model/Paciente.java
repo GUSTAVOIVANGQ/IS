@@ -4,6 +4,9 @@ import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
+
+import com.version.nutrition.model.Paciente.Medicion;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -192,8 +195,15 @@ public class Paciente extends Usuario {
     }
 
     public double calcularProgreso() {
-        if (pesoObjetivo == 0) return 0;
+        if (pesoObjetivo == 0 || seguimientoPeso == null || seguimientoPeso.isEmpty()) {
+            return 0.0;
+        }
+        
         double pesoInicial = seguimientoPeso.get(0).getPeso();
+        if (pesoInicial == peso) {
+            return 0.0;
+        }
+        
         double progreso = Math.abs(pesoInicial - peso) / Math.abs(pesoInicial - pesoObjetivo) * 100;
         return Math.min(progreso, 100);
     }
@@ -407,6 +417,10 @@ public class Paciente extends Usuario {
     public List<Medicion> getHistorialMediciones() {
         return historialMediciones;
     }
+    
+    public void setHistorialMediciones(List<Medicion> historialMediciones) {
+        this.historialMediciones = historialMediciones;
+    }
 
     public double getEstatura() {
         return estatura;
@@ -439,5 +453,4 @@ public class Paciente extends Usuario {
     public void setCitas(List<Cita> citas) {
         this.citas = citas;
     }
-    
 }

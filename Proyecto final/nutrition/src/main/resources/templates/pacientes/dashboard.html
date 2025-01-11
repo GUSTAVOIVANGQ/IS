@@ -30,14 +30,14 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="#">NutriSystem</a>
+            <a class="navbar-brand" th:href="@{/paciente/dashboard}">NutriSystem</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="#"><i class="bi bi-house"></i> Dashboard</a>
+                        <a class="nav-link active" th:href="@{/paciente/dashboard}"><i class="bi bi-house"></i> Dashboard</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/paciente/citas}"><i class="bi bi-calendar"></i> Mis Citas</a>
@@ -94,9 +94,12 @@
                             <div class="progress-bar" role="progressbar" 
                                 th:with="progreso=${paciente.calcularProgreso()}"
                                 th:style="'width: ' + ${progreso} + '%'"
-                                th:text="${#numbers.formatDecimal(progreso, 1, 1)} + '%'">
+                                th:text="${progreso > 0 ? #numbers.formatDecimal(progreso, 1, 1) + '%' : 'Sin progreso'}">
                             </div>
                         </div>
+                        <small class="text-muted" th:if="${progreso == 0}">
+                            No hay datos de seguimiento disponibles
+                        </small>
                     </div>
                 </div>
             </div>

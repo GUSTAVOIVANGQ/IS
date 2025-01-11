@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
 
 @Controller
 @RequestMapping("/paciente")
@@ -31,6 +32,16 @@ public class PacienteController {
             // Obtener el paciente actual
             Paciente paciente = pacienteService.buscarPorEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
+            
+            // Inicializar seguimiento si es null
+            if (paciente.getSeguimientoPeso() == null) {
+                paciente.setSeguimientoPeso(new ArrayList<>());
+            }
+            
+            // Inicializar historial de mediciones si es null
+            if (paciente.getHistorialMediciones() == null) {
+                paciente.setHistorialMediciones(new ArrayList<>());
+            }
             
             // Obtener la próxima cita
             Cita proximaCita = citaService.buscarProximaCitaPaciente(

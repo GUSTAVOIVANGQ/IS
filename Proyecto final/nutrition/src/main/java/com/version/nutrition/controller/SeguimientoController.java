@@ -61,24 +61,33 @@ public class SeguimientoController {
             Paciente paciente = pacienteService.buscarPorEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
 
-            // Obtener y ordenar los seguimientos
             List<SeguimientoPeso> seguimientos = seguimientoService.obtenerHistorial(paciente.getId());
-            
-            // Asegurar que la lista no sea nula
             if (seguimientos == null) {
                 seguimientos = new ArrayList<>();
             }
+
+            // Debug - imprimir cantidad de seguimientos
+            System.out.println("Número de seguimientos encontrados: " + seguimientos.size());
             
-            // Ordenar por fecha
+            // Ordenar por fecha de registro, del más antiguo al más reciente
             seguimientos.sort((a, b) -> a.getFechaRegistro().compareTo(b.getFechaRegistro()));
             
             model.addAttribute("paciente", paciente);
             model.addAttribute("seguimientos", seguimientos);
-            model.addAttribute("metricas", seguimientoService.obtenerMetricasProgreso(paciente.getId()));
-            model.addAttribute("tendencias", seguimientoService.calcularTendencias(paciente.getId()));
+            
+            // Debug - verificar si hay datos después de ordenar
+            if (!seguimientos.isEmpty()) {
+                System.out.println("Primer seguimiento: " + seguimientos.get(0).getFechaRegistro());
+                System.out.println("Último seguimiento: " + seguimientos.get(seguimientos.size()-1).getFechaRegistro());
+                
+                model.addAttribute("metricas", seguimientoService.obtenerMetricasProgreso(paciente.getId()));
+                model.addAttribute("tendencias", seguimientoService.calcularTendencias(paciente.getId()));
+            }
             
             return "pacientes/seguimiento/historial";
+            
         } catch (Exception e) {
+            e.printStackTrace(); // Agregar para ver el error completo
             model.addAttribute("error", "Error al cargar historial: " + e.getMessage());
             return "redirect:/paciente/dashboard";
         }

@@ -109,9 +109,16 @@
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="card-title mb-0">Evolución del Peso</h5>
+                <small class="text-muted" th:text="${'Registros encontrados: ' + #lists.size(seguimientos)}">0 registros</small>
             </div>
             <div class="card-body">
-                <div class="chart-container">
+                <div th:if="${#lists.isEmpty(seguimientos)}" class="text-center py-4">
+                    <p class="text-muted">No hay registros de seguimiento disponibles.</p>
+                    <a th:href="@{/paciente/seguimiento/registrar}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Registrar Primera Medición
+                    </a>
+                </div>
+                <div th:unless="${#lists.isEmpty(seguimientos)}" class="chart-container">
                     <canvas id="evolucionPeso"></canvas>
                 </div>
             </div>
@@ -157,64 +164,103 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script th:inline="javascript">
         document.addEventListener('DOMContentLoaded', function() {
-            // Obtener datos del modelo de Thymeleaf
-            const seguimientos = /*[[${seguimientos}]]*/ [];
-            
-            // Verificar si hay datos
-            if (seguimientos && seguimientos.length > 0) {
-                // Preparar datos para el gráfico
-                const datos = {
-                    labels: seguimientos.map(s => {
-                        const fecha = new Date(s.fechaRegistro);
-                        return fecha.toLocaleDateString('es-ES', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: '2-digit'
-                        });
-                    }),
-                    datasets: [{
-                        label: 'Peso (kg)',
-                        data: seguimientos.map(s => s.peso),
-                        borderColor: '#4CAF50',
-                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                };
+            try {
+                // Obtener los datos del modelo de forma segura usando /*[[ ]]*/ para evitar problemas de parseo
+                const rawData = /*[[${seguimientos}]]*/ [];
+                
+                // Verificar si hay datos
+                if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
+                    console.log('No hay datos de seguimiento disponibles');
+                    return;
+                }
 
-                // Configuración del gráfico
-                const config = {
+                console.log('Datos recibidos:', rawData);
+
+                // Extraer y procesar los datos de forma segura
+                const datos = rawData.map(s => {
+                    try {
+                        // Procesar la fecha de forma segura
+                        let fechaStr;
+                        if (s.fechaRegistro) {
+                            const fecha = new Date(s.fechaRegistro);
+                            if (!isNaN(fecha)) {
+                                fechaStr = fecha.toLocaleDateString('es-ES');
+                            } else {
+                                fechaStr = 'Fecha inválida';
+                            }
+                        } else {
+                            fechaStr = 'Sin fecha';
+                        }
+
+                        // Procesar el peso de forma segura
+                        const peso = parseFloat(s.peso) || 0;
+
+                        return {
+                            fecha: fechaStr,
+                            peso: peso
+                        };
+                    } catch (err) {
+                        console.error('Error procesando seguimiento:', err);
+                        return null;
+                    }
+                }).filter(d => d !== null);
+
+                console.log('Datos procesados:', datos);
+
+                // Verificar si hay datos válidos después del procesamiento
+                if (datos.length === 0) {
+                    throw new Error('No hay datos válidos para mostrar');
+                }
+
+                // Crear el gráfico
+                const ctx = document.getElementById('evolucionPeso');
+                if (!ctx) {
+                    throw new Error('No se encontró el elemento canvas');
+                }
+
+                new Chart(ctx, {
                     type: 'line',
-                    data: datos,
+                    data: {
+                        labels: datos.map(d => d.fecha),
+                        datasets: [{
+                            label: 'Peso (kg)',
+                            data: datos.map(d => d.peso),
+                            borderColor: '#4CAF50',
+                            backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }]
+                    },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: {
-                                position: 'top',
-                            }
+                            legend: { display: true, position: 'top' }
                         },
                         scales: {
                             y: {
                                 beginAtZero: false,
-                                title: {
-                                    display: true,
-                                    text: 'Peso (kg)'
-                                }
+                                title: { display: true, text: 'Peso (kg)' }
                             },
                             x: {
-                                title: {
-                                    display: true,
-                                    text: 'Fecha'
-                                }
+                                title: { display: true, text: 'Fecha' }
                             }
                         }
                     }
-                };
+                });
 
-                // Crear el gráfico
-                const ctx = document.getElementById('evolucionPeso').getContext('2d');
-                new Chart(ctx, config);
+            } catch (error) {
+                console.error('Error al crear el gráfico:', error);
+                const container = document.querySelector('.chart-container');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> 
+                            No se pudo cargar el gráfico: ${error.message}
+                        </div>`;
+                }
             }
         });
     </script>
