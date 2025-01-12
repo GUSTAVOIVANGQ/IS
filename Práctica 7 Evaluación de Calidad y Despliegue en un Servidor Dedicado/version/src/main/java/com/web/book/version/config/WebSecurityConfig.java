@@ -79,6 +79,8 @@ public class WebSecurityConfig {
                                "/images/**",
                                "/static/**",
                                "/uploads/**",
+                               "/external/**", // Agregar esta línea
+                               "/profile-photos/**", // Agregar esta línea
                                "/home", 
                                "/dashboard", 
                                "/index",
@@ -134,8 +136,9 @@ public class WebSecurityConfig {
             )
             .headers(headers -> headers
                 .frameOptions().disable()
-                .contentSecurityPolicy("img-src 'self' data: https://*.dropboxusercontent.com")
-            );
+                .contentSecurityPolicy("default-src 'self' data: https: 'unsafe-inline'; " +
+                                     "img-src 'self' data: https: http: blob: *.tvmaze.com *.dropboxusercontent.com covers.openlibrary.org;"))
+            ;
 
         // Configurar OAuth2 solo si está habilitado
         if (apiKeyConfig != null && apiKeyConfig.isGoogleAuthEnabled()) {
