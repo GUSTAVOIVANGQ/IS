@@ -44,6 +44,7 @@ public class OpenLibraryService {
         this.objectMapper = new ObjectMapper();
     }
 
+    @Cacheable(value = "featuredBooksCache", key = "'featured'")
     public List<Book> getFeaturedBooks() {
         try {
             List<Book> books = searchBooks("bestseller");
@@ -56,7 +57,7 @@ public class OpenLibraryService {
         }
     }
         
-    @Cacheable(value = "bookSearchCache", key = "#query")
+    @Cacheable(value = "bookSearchCache", key = "#query + '-' + #page + '-' + #size")
     public List<Book> searchBooks(String query, int page, int size) {
         try {
             String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
@@ -79,6 +80,7 @@ public class OpenLibraryService {
         }
     }
 
+    @Cacheable(value = "bookSearchCache", key = "#query")
     public List<Book> searchBooks(String query) {
         try {
             String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
@@ -113,6 +115,7 @@ public class OpenLibraryService {
         }
     }
 
+    // No cachear búsquedas asociadas a usuarios para mantener historial actualizado
     public List<Book> searchBooks(String query, User user) {
         try {
             List<Book> books = searchBooks(query);
@@ -135,7 +138,7 @@ public class OpenLibraryService {
         }
     }
 
-    @Cacheable(value = "bookDetailsCache", key = "#isbn")
+    @Cacheable(value = "bookDetailsCache", key = "#isbn", unless = "#result == null")
     public Book getBookDetails(String isbn) {
         try {
             String url = "https://openlibrary.org/api/books?bibkeys=ISBN:" + isbn + "&format=json&jscmd=data";
@@ -222,7 +225,7 @@ public class OpenLibraryService {
         return book;
     }
 
-    @Cacheable(value = "similarBooksCache", key = "#genre + '-' + #author")
+    @Cacheable(value = "similarBooksCache", key = "#genre + '-' + #author", unless = "#result.empty")
     public List<Book> getSimilarBooks(String genre, String author) {
         try {
             StringBuilder queryBuilder = new StringBuilder();
@@ -249,7 +252,7 @@ public class OpenLibraryService {
         }
     }
 
-    // Nuevo método para obtener recomendaciones personalizadas
+    @Cacheable(value = "recommendationsCache", key = "#user.id + '-' + #criteria.hashCode()")
     public List<Book> getPersonalizedRecommendations(User user, RecommendationCriteria criteria) {
         try {
             List<Book> recommendations = new ArrayList<>();

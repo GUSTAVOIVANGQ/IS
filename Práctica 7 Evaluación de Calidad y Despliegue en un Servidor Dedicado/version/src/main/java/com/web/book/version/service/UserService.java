@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 
 import java.util.Optional;
 import java.util.List;
@@ -32,6 +35,7 @@ public class UserService implements UserDetailsService {
         this.passwordEncoder = passwordEncoder;
     }
     
+    @Cacheable(value = "userCache", key = "#username")
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -41,6 +45,7 @@ public class UserService implements UserDetailsService {
         return UserDetailsImpl.build(user);
     }
 
+    @CachePut(value = "userCache", key = "#user.username")
     public User save(User user) {
         try {
             logger.info("Attempting to save user: {}", user.getUsername());
@@ -54,14 +59,17 @@ public class UserService implements UserDetailsService {
         }
     }
 
+    @Cacheable(value = "userExistsCache", key = "#username")
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
     }
 
+    @Cacheable(value = "userExistsCache", key = "#email")
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
     }
 
+    @Cacheable(value = "userCache", key = "#username", unless = "#result.isEmpty()")
     public Optional<User> findByUsername(String username) {
         try {
             return userRepository.findByUsername(username);
@@ -71,10 +79,12 @@ public class UserService implements UserDetailsService {
         }
     }
 
+    @Cacheable(value = "userCache", key = "#id", unless = "#result.isEmpty()")
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
     
+    @CachePut(value = "userCache", key = "#username")
     public void updateProfilePhoto(String username, String filename) {
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new RuntimeException("User not found"));
@@ -82,10 +92,12 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
+    @Cacheable(value = "allUsersCache")
     public List<User> findAllUsers() {
         return userRepository.findAll();
     }
 
+    @CachePut(value = "userCache", key = "#id")
     public void updateUser(Long id, User updatedUser) {
         User user = findById(id)
             .orElseThrow(() -> new RuntimeException("User not found"));
@@ -106,14 +118,17 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
+    @CacheEvict(value = "userCache", key = "#id")
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }
 
+    @Cacheable(value = "userCache", key = "'email:' + #email", unless = "#result.isEmpty()")
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
+    @CachePut(value = "userCache", key = "#id")
     public User updateUserAPI(Long id, User userDetails) {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
@@ -135,11 +150,13 @@ public class UserService implements UserDetailsService {
         return userRepository.save(user);
     }
 
+    @Cacheable(value = "userCache", key = "#username")
     public User getCurrentUser(String username) {
         return userRepository.findByUsername(username)
             .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
     }
 
+    @CachePut(value = "userCache", key = "#id")
     @Transactional
     public void toggleUserStatus(Long id) {
         User user = userRepository.findById(id)

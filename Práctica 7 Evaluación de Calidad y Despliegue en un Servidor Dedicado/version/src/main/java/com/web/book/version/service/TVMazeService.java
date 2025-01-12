@@ -26,6 +26,8 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.springframework.cache.annotation.Cacheable;
+
 @Service
 public class TVMazeService {
     private static final Logger logger = LoggerFactory.getLogger(OpenLibraryService.class);
@@ -39,6 +41,7 @@ public class TVMazeService {
         this.restTemplate = new RestTemplate();
     }
 
+    @Cacheable(value = "featuredShowsCache", key = "'featured'")
     public List<Show> getFeaturedShows() {
         try {
             // Obtener shows populares más actuales
@@ -75,6 +78,7 @@ public class TVMazeService {
         }
     }
 
+    @Cacheable(value = "showDetailsCache", key = "#id", unless = "#result == null")
     public Show getShowById(Long id) {
         try {
             String url = BASE_URL + "/shows/" + id;
@@ -95,6 +99,7 @@ public class TVMazeService {
         }
     }
 
+    @Cacheable(value = "showSearchCache", key = "#query")
     public List<Show> searchShows(String query) {
         try {
             String encodedQuery = UriComponentsBuilder.fromHttpUrl(BASE_URL + "/search/shows")
@@ -130,6 +135,7 @@ public class TVMazeService {
         }
     }
 
+    // No cachear búsquedas asociadas a usuarios para mantener el historial actualizado
     public List<Show> searchShows(String query, User user) {
         try {
             List<Show> shows = searchShows(query);
@@ -159,7 +165,7 @@ public class TVMazeService {
         return show.getType() == null || "series".equalsIgnoreCase(show.getType());
     }
 
-    // Nuevo método para obtener shows similares por género
+    @Cacheable(value = "similarShowsCache", key = "#genre", unless = "#result.empty")
     public List<Show> getSimilarShows(String genre) {
         try {
             // TVMaze no tiene endpoint directo para búsqueda por género,
@@ -181,7 +187,7 @@ public class TVMazeService {
         }
     }
 
-    // Nuevo método para obtener recomendaciones personalizadas
+    @Cacheable(value = "showRecommendationsCache", key = "#user.id + '-' + #criteria.hashCode()")
     public List<Show> getPersonalizedRecommendations(User user, RecommendationCriteria criteria) {
         try {
             List<Show> recommendations = new ArrayList<>();

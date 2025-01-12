@@ -133,15 +133,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
-        <!-- Google Guava para caché -->
+        <!-- Caffeine Cache -->
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>31.1-jre</version>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>3.1.8</version>
         </dependency>
-
         <!-- Dependencias para pruebas no funcionales -->
-        
         <!-- JMeter Core para pruebas de rendimiento -->
         <dependency>
             <groupId>org.apache.jmeter</groupId>

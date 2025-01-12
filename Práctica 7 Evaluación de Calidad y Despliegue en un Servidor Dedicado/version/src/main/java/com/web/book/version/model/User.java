@@ -61,9 +61,11 @@ public class User {
 
     // Default constructor
     public User() {
+        }
+    // Method to check if the user is empty
+    public boolean isEmpty() {
+        return username == null || username.isEmpty();
     }
-
-    
     // Add getters/setters
     public String getNombre() {
         return nombre;
