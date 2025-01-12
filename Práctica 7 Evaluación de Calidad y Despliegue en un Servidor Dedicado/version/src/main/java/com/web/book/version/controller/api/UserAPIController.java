@@ -59,7 +59,7 @@ public class UserAPIController {
             User user = userService.findByUsername(auth.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-            String filename = fileUploadService.uploadProfilePhoto(file);
+            String filename = fileUploadService.uploadProfilePhoto(file, user.getId().toString());
             user.setProfilePhotoUrl(filename);
             userService.updateUser(user.getId(), user);
 

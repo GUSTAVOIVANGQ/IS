@@ -57,7 +57,7 @@ public class AdminController {
     @PostMapping("/users/{id}/photo")
     public String updateUserPhoto(@PathVariable Long id, @RequestParam("photo") MultipartFile file) {
         try {
-            String filename = fileUploadService.uploadProfilePhoto(file);
+            String filename = fileUploadService.uploadProfilePhoto(file, id.toString());
             userService.updateUserProfilePhoto(id, filename);
             return "redirect:/admin/users";
         } catch (Exception e) {

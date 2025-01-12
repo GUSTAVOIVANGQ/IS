@@ -63,7 +63,7 @@ public class ProfileController {
                 return "redirect:/auth/login";
             }
             
-            String filename = fileUploadService.uploadProfilePhoto(file);
+            String filename = fileUploadService.uploadProfilePhoto(file, userDetails.getUsername());
             userService.updateProfilePhoto(userDetails.getUsername(), filename);
             return "redirect:/user/profile";
             

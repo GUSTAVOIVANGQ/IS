@@ -235,6 +235,20 @@
             <version>1.10.1</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Dropbox Core SDK -->
+        <dependency>
+            <groupId>com.dropbox.core</groupId>
+            <artifactId>dropbox-core-sdk</artifactId>
+            <version>5.4.5</version>
+        </dependency>
+
+        <!-- Apache Commons IO - útil para operaciones con archivos -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.15.1</version>
+        </dependency>
     </dependencies>
 
     <build>

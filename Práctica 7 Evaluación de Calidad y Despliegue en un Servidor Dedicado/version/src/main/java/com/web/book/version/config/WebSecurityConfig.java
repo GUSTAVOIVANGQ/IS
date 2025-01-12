@@ -131,6 +131,10 @@ public class WebSecurityConfig {
                         response.sendRedirect("/auth/login");
                     }
                 })
+            )
+            .headers(headers -> headers
+                .frameOptions().disable()
+                .contentSecurityPolicy("img-src 'self' data: https://*.dropboxusercontent.com")
             );
 
         // Configurar OAuth2 solo si está habilitado

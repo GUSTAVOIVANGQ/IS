@@ -328,8 +328,15 @@
                         <tbody>
                             <tr th:each="user : ${users}">
                                 <td>
-                                    <img th:src="${user.profilePhotoUrl != null ? user.profilePhotoUrl : '/static/images/default-profile.png'}"
-                                    class="profile-photo mb-3" alt="Profile Photo">
+                                    <img th:if="${not #strings.isEmpty(user.profilePhotoUrl)}"
+                                         th:src="${user.profilePhotoUrl}"
+                                         class="profile-photo mb-3" 
+                                         alt="Profile Photo"
+                                         onerror="handleImageError(this)">
+                                    <img th:unless="${not #strings.isEmpty(user.profilePhotoUrl)}"
+                                         src="/static/images/default-profile.png"
+                                         class="profile-photo mb-3" 
+                                         alt="Default Profile Photo">
                                 </td>
                                 <td th:text="${user.username}">username</td>
                                 <td th:text="${user.email}">email</td>
@@ -378,8 +385,15 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body text-center">
-                        <img th:src="${user.profilePhotoUrl != null ? user.profilePhotoUrl : '/static/images/default-profile.png'}"
-                        class="profile-photo mb-3" alt="Profile Photo">
+                        <img th:if="${user.profilePhotoUrl != null && !user.profilePhotoUrl.isEmpty()}"
+                             th:src="${user.profilePhotoUrl}"
+                             class="user-photo-modal mb-3" 
+                             alt="Profile Photo"
+                             onerror="this.src='/static/images/default-profile.png'">
+                        <img th:unless="${user.profilePhotoUrl != null && !user.profilePhotoUrl.isEmpty()}"
+                             src="/static/images/default-profile.png"
+                             class="user-photo-modal mb-3" 
+                             alt="Default Profile Photo">
                         <div class="mb-3">
                             <label for="photo" class="form-label">Choose new photo</label>
                             <input type="file" class="form-control" id="photo" name="photo" 
@@ -473,5 +487,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function handleImageError(img) {
+            console.error('Error cargando imagen:', img.src);
+            img.src = '/static/images/default-profile.png';
+        }
+    </script>
 </body>
 </html>

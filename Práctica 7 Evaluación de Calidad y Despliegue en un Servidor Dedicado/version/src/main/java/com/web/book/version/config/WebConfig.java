@@ -23,6 +23,10 @@ public class WebConfig implements WebMvcConfigurer {
         // Asegura que las imágenes por defecto sean accesibles
         registry.addResourceHandler("/images/**")
                 .addResourceLocations("classpath:/static/images/");
+                
+        // Permitir recursos externos
+        registry.addResourceHandler("/external/**")
+                .addResourceLocations("https://dl.dropboxusercontent.com/");
     }
 
     @Bean
