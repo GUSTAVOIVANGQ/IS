@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Books - Book & Movie Recommendations</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .book-card {
+            transition: transform 0.3s;
+            height: 100%;
+        }
+        .book-card:hover {
+            transform: translateY(-5px);
+        }
+        .book-cover {
+            height: 250px;
+            object-fit: cover;
+        }
+        .search-box {
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('/static/images/library-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            padding: 4rem 0;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/home">Book & Movie Recommendations</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/books">Books</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/movies">Movies</a>
+                    </li>
+                </ul>
+                <form th:action="@{/logout}" method="post" class="d-flex">
+                    <button class="btn btn-outline-light" type="submit">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Search Section -->
+    <div class="search-box text-center text-white">
+        <div class="container">
+            <h1 class="mb-4">Find Your Next Great Read</h1>
+            <form th:action="@{/books/search}" method="get" class="col-md-6 mx-auto">
+                <div class="input-group mb-3">
+                    <input type="text" name="query" class="form-control" placeholder="Search books by title, author, or ISBN...">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Featured Books Section -->
+    <div class="container mb-5">
+        <h2 class="mb-4">Featured Books</h2>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4" th:if="${featuredBooks != null}">
+            <div class="col" th:each="book : ${featuredBooks}">
+                <div class="card book-card shadow-sm">
+                    <img th:src="${book.coverUrl}" class="card-img-top book-cover" alt="Book Cover">
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${book.title}">Book Title</h5>
+                        <p class="card-text" th:text="${book.author}">Author Name</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted" th:text="${book.publishYear}">Publication Year</small>
+                            <a th:href="@{/books/details/{isbn}(isbn=${book.isbn})}" class="btn btn-sm btn-outline-primary">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Results Section -->
+    <div class="container mb-5" th:if="${books != null}">
+        <h2 class="mb-4">Search Results</h2>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+            <div class="col" th:each="book : ${books}">
+                <div class="card book-card shadow-sm">
+                    <img th:src="${book.coverUrl}" class="card-img-top book-cover" alt="Book Cover">
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${book.title}">Book Title</h5>
+                        <p class="card-text" th:text="${book.author}">Author Name</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted" th:text="${book.publishYear}">Publication Year</small>
+                            <a th:href="@{/books/{isbn}(isbn=${book.isbn})}" class="btn btn-sm btn-outline-primary">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-dark text-white">
+        <div class="container text-center">
+            <span>© 2024 Book & Movie Recommendations. All rights reserved.</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
