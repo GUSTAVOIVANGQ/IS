@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <title th:text="${show.name + ' - Details'}">Show Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        .show-poster {
+            max-height: 500px;
+            object-fit: contain;
+        }
+        .summary {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        .rating-large {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .metadata {
+            font-size: 0.9rem;
+        }
+        .favorite-btn {
+            transition: all 0.3s ease;
+        }
+        .favorite-btn.is-favorite {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+        .favorite-btn.is-favorite:hover {
+            background-color: #bb2d3b;
+            border-color: #b02a37;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/home">Book & Movie Recommendations</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/books">Books</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/movies">Movies</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" 
+                           data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> 
+                            <span sec:authentication="name">Username</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/user/profile">Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post" class="dropdown-item">
+                                    <button type="submit" class="btn btn-link text-decoration-none p-0">
+                                        <i class="bi bi-box-arrow-right"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Show Details Content -->
+    <div class="container mt-4">
+        <div th:if="${error}" class="alert alert-danger" role="alert">
+            <span th:text="${error}">Error message</span>
+        </div>
+        
+        <div th:if="${show}" class="row">
+            <div class="col-md-4">
+                <img th:if="${show.image != null && show.image.original != null}"
+                     th:src="${show.image.original}"
+                     class="img-fluid rounded"
+                     th:alt="${show.name}">
+                <img th:unless="${show.image != null && show.image.original != null}"
+                     src="/static/images/no-poster.jpg"
+                     class="img-fluid rounded"
+                     alt="No image available">
+            </div>
+            <div class="col-md-8">
+                <h1 th:text="${show.name}">Show Title</h1>
+                <div class="mb-3">
+                    <span class="badge bg-primary me-2" 
+                          th:each="genre : ${show.genres}" 
+                          th:text="${genre}">Genre</span>
+                </div>
+                <div class="mb-3" th:if="${show.rating != null && show.rating.average != null}">
+                    <strong>Rating: </strong>
+                    <span th:text="${show.rating.average + ' ★'}">0.0 ★</span>
+                </div>
+                <div class="mb-3" th:if="${show.premiered != null}">
+                    <strong>Premiered: </strong>
+                    <span th:text="${show.premiered}">Date</span>
+                </div>
+                <div class="mb-3">
+                    <strong>Status: </strong>
+                    <span th:text="${show.status}">Status</span>
+                </div>
+                <div class="mb-3">
+                    <h3>Summary</h3>
+                    <div th:utext="${show.summary}">Summary text</div>
+                </div>
+                <div class="card-body d-flex gap-2">
+                    <button id="favoriteBtn" 
+                            class="btn btn-outline-primary favorite-btn"
+                            th:attr="data-show-id=${show.id}"
+                            onclick="toggleFavorite(this)">
+                        <i class="bi bi-heart-fill"></i> 
+                        <span>Add to Favorites</span>
+                    </button>
+                    <a href="/movies" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Shows
+                    </a>
+                </div>                    
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer py-3 bg-light mt-5">
+        <div class="container text-center">
+            <span class="text-muted">© 2024 Book & Movie Recommendations. All rights reserved.</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript para manejo de favoritos -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const favoriteBtn = document.getElementById('favoriteBtn');
+            const showId = favoriteBtn.getAttribute('data-show-id');
+            
+            // Verificar si el show ya está en favoritos
+            fetch(`/favorites/check/${showId}`)
+                .then(response => response.json())
+                .then(isFavorite => {
+                    updateFavoriteButton(favoriteBtn, isFavorite);
+                })
+                .catch(error => console.error('Error:', error));
+        });
+
+        function toggleFavorite(button) {
+            const showId = button.getAttribute('data-show-id');
+            const isFavorite = button.classList.contains('is-favorite');
+            
+            const method = isFavorite ? 'DELETE' : 'POST';
+            const url = isFavorite ? `/favorites/${showId}` : `/favorites/shows/${showId}`;
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    updateFavoriteButton(button, !isFavorite);
+                } else {
+                    throw new Error('Failed to update favorite');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating favorites. Please try again.');
+            });
+        }
+
+        function updateFavoriteButton(button, isFavorite) {
+            if (isFavorite) {
+                button.classList.add('is-favorite');
+                button.querySelector('span').textContent = 'Remove from Favorites';
+            } else {
+                button.classList.remove('is-favorite');
+                button.querySelector('span').textContent = 'Add to Favorites';
+            }
+        }
+    </script>
+</body>
+</html>
